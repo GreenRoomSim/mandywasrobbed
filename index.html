@@ -746,27 +746,36 @@
                 </select>
               </label>
               
-              <label class="field">Premiere Format
-                <select id="premiereFormatSelect">
-                  <option value="regular">Regular Premiere</option>
-                  <option value="no-elim">Regular Premiere (No Elimination)</option>
-                  <option value="top2">Top 2 Premiere (Lip Sync for the Win)</option>
-                </select>
-              </label>
+              <div id="extraSettingsWrapper" style="position: relative; display: grid; gap: 10px; margin-top: 4px;">
+                
+                <div id="tournamentOverlay" class="hidden" style="position: absolute; inset: -5px; background: rgba(238, 251, 231, 0.7); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 10; display: flex; align-items: center; justify-content: center; border-radius: 12px; border: 2px solid var(--border); pointer-events: none; transition: all 0.3s ease;">
+                  <div style="background: var(--card); padding: 8px 16px; border-radius: 20px; box-shadow: var(--shadow); border: 1px solid var(--border); display: flex; align-items: center; gap: 8px;">
+                    <span style="color: var(--muted); font-weight: 600; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase;">Other Settings Locked For This Format</span>
+                  </div>
+                </div>
 
-              <label class="field">Finale Format
-                <select id="finaleFormatSelect">
-                  <option value="top4">Top 4 Finale (Lip Sync Smackdown)</option>
-                  <option value="top3">Top 3 Finale</option>
-                </select>
-              </label>
+                <label class="field">Premiere Format
+                  <select id="premiereFormatSelect">
+                    <option value="regular">Regular Premiere</option>
+                    <option value="no-elim">Regular Premiere (No Elimination)</option>
+                    <option value="top2">Top 2 Premiere (Lip Sync for the Win)</option>
+                  </select>
+                </label>
 
-               <label class="field">LaLaPaRuza Smackdown
-                <select id="lalaPaRuzaSelect">
-                  <option value="enabled">Enabled (Mid-Season)</option>
-                  <option value="disabled">Disabled</option>
-                </select>
-              </label>
+                <label class="field">Finale Format
+                  <select id="finaleFormatSelect">
+                    <option value="top4">Top 4 Finale (Lip Sync Smackdown)</option>
+                    <option value="top3">Top 3 Finale</option>
+                  </select>
+                </label>
+
+                <label class="field">LaLaPaRuza Smackdown
+                  <select id="lalaPaRuzaSelect">
+                    <option value="enabled">Enabled (Mid-Season)</option>
+                    <option value="disabled">Disabled</option>
+                  </select>
+                </label>
+              </div>
 
               <button id="startBtn" class="primary" disabled>Start Season</button>
             </div>
@@ -3554,6 +3563,26 @@ if (state.seasonFormat === "tournament-of-all-stars") {
     }
 
     // Wiring up basic buttons
+    // Toggle the clean overlay when Tournament mode is active
+    el.seasonFormatSelect.addEventListener("change", (e) => {
+      const isTournament = e.target.value === "tournament-of-all-stars";
+      const overlay = document.getElementById("tournamentOverlay");
+      const extraSelects = document.querySelectorAll("#extraSettingsWrapper select");
+
+      if (isTournament) {
+        overlay.classList.remove("hidden");
+        extraSelects.forEach(sel => {
+          sel.disabled = true;
+          sel.style.opacity = "0.5"; // Makes the dropdowns look faded behind the glass
+        });
+      } else {
+        overlay.classList.add("hidden");
+        extraSelects.forEach(sel => {
+          sel.disabled = false;
+          sel.style.opacity = "1";
+        });
+      }
+    });
     el.randomizeQueenBtn.addEventListener("click", randomizeQueenForm);
     el.addQueenBtn.addEventListener("click", addQueenFromForm);
     el.startBtn.addEventListener("click", startSeason);
