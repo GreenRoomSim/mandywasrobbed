@@ -241,33 +241,74 @@
 
     /* Standings Table Styling */
     .standings-table { width: 100%; border-collapse: collapse; margin-top: 16px;
-      font-size: 14px; background: white; }
-    .standings-table th { background: #f9fff5; padding: 12px 10px; border: 1px solid var(--border);
-      font-weight: 700; text-align: center; font-size: 13px; }
-      .standings-table th.ep-challenge {
+      font-size: 14px; background: white; table-layout: auto; }
+    .standings-table th { background: #f9fff5; padding: 8px 6px; border: 1px solid var(--border);
+      font-weight: 700; text-align: center; font-size: 13px; white-space: nowrap; }
+    .standings-table th.ep-challenge {
       background: #f2ffe7;
       font-family: inherit;
       font-weight: 500;
-      font-size: 11px;
+      font-size: 10px;
       color: var(--muted);
       white-space: nowrap;
-      padding: 5px 8px;
+      padding: 4px 6px;
+      max-width: 80px;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .standings-table th.ep-mini {
       background: #f9fff5;
       font-family: inherit;
       font-weight: 400;
-      font-size: 10px;
+      font-size: 9px;
       font-style: italic;
       color: var(--muted);
       white-space: nowrap;
-      padding: 4px 8px;
+      padding: 3px 6px;
+      max-width: 80px;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    .standings-table td { padding: 10px; border: 1px solid var(--border);
-      text-align: center; }
-    .standings-table td.qname-cell { text-align: left; font-weight: 700; width: 30%;
+    .standings-table td { padding: 0; border: 1px solid var(--border);
+      text-align: center; vertical-align: middle; }
+    .standings-table td.qname-cell { text-align: left; font-weight: 700; min-width: 160px; max-width: 220px; padding: 0;
     }
     .standings-table .empty-cell { background: #fcfcfc; }
+    /* Queen cell layout: name + full-height image */
+    .standings-table .qname-inner {
+      display: flex;
+      align-items: stretch;
+      height: 100%;
+      min-height: 52px;
+    }
+    .standings-table .qname-text {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      padding: 8px 10px;
+      font-weight: 700;
+    }
+    .standings-table .qname-img {
+      width: 52px;
+      flex-shrink: 0;
+      object-fit: cover;
+      border-left: 1px solid var(--border);
+      display: block;
+      align-self: stretch;
+      height: 100%;
+    }
+    /* Placement cell text */
+    .standings-table td.placement-cell {
+      font-weight: 900;
+      font-size: 13px;
+      padding: 6px 4px;
+      white-space: nowrap;
+    }
+    .standings-table td.score-cell {
+      font-weight: 700;
+      padding: 6px 8px;
+      white-space: nowrap;
+    }
 
     .footer-actions { display: flex; justify-content: flex-end;
       gap: 12px; align-items: center; margin-top: 24px; flex-wrap: wrap; }
@@ -2735,18 +2776,18 @@ if (state.seasonFormat === "tournament-of-all-stars") {
                       ${sortedQueens.map(q => `
                         <tr>
                           <td class="qname-cell">
-                            <div style="display:flex; align-items:center; justify-content:space-between;">
-                              <span>${escapeHtml(q.name)}</span>
-                              ${q.image ? `<img src="${q.image}" style="width:42px; height:42px; object-fit:cover; border:2px solid var(--border); flex-shrink:0;" onerror="this.style.display='none'">` : ""}
+                            <div class="qname-inner">
+                              <span class="qname-text">${escapeHtml(q.name)}</span>
+                              ${q.image ? `<img src="${q.image}" class="qname-img" onerror="this.style.display='none'">` : ""}
                             </div>
                           </td>
                           ${Array.from({length: state.episodeNumber}, (_, i) => {
                             let p = q.history[i];
                             if (!p) return `<td class="empty-cell"></td>`;
                             let cssClass = getTrackRecordClass(p);
-                            return `<td class="${cssClass}" style="font-weight: 900; font-size: 12px;">${p}</td>`;
+                            return `<td class="placement-cell ${cssClass}">${p}</td>`;
                           }).join("")}
-                          <td style="font-weight: 600;">${trackScore(q)}</td>
+                          <td class="score-cell">${trackScore(q)}</td>
                         </tr>
                       `).join("")}
                     </tbody>
@@ -3027,18 +3068,18 @@ if (state.seasonFormat === "tournament-of-all-stars") {
                         ${sortedQueens.map(q => `
                           <tr>
                             <td class="qname-cell">
-                            <div style="display:flex; align-items:center; gap:10px;">
-                              <span>${escapeHtml(q.name)}</span>
-                              ${q.image ? `<img src="${q.image}" style="width:42px; height:42px; border-radius:50%; object-fit:cover; border:2px solid var(--border); flex-shrink:0;" onerror="this.style.display='none'">` : ""}
-                            </div>
-                          </td>
+                              <div class="qname-inner">
+                                <span class="qname-text">${escapeHtml(q.name)}</span>
+                                ${q.image ? `<img src="${q.image}" class="qname-img" onerror="this.style.display='none'">` : ""}
+                              </div>
+                            </td>
                             ${Array.from({length: state.episodeNumber}, (_, i) => {
                               let p = q.history[i];
                               if (!p) return `<td class="empty-cell"></td>`;
                               let cssClass = getTrackRecordClass(p);
-                              return `<td class="${cssClass}" style="font-weight: 900; font-size: 12px;">${p}</td>`;
+                              return `<td class="placement-cell ${cssClass}">${p}</td>`;
                             }).join("")}
-                            <td style="font-weight: 600;">${trackScore(q)}</td>
+                            <td class="score-cell">${trackScore(q)}</td>
                           </tr>
                         `).join("")}
                       </tbody>
@@ -3168,22 +3209,33 @@ if (state.seasonFormat === "tournament-of-all-stars") {
                   <table class="standings-table">
                     <thead>
                       <tr>
-                        <th>Queen</th>
+                        <th rowspan="3">Queen</th>
                         ${Array.from({length: state.episodeNumber}, (_, i) => `<th>Ep ${i+1}</th>`).join("")}
-                        <th>Score</th>
+                        <th rowspan="3">Score</th>
+                      </tr>
+                      <tr>
+                        ${Array.from({length: state.episodeNumber}, (_, i) => `<th class="ep-challenge">${state.episodeLog[i] ? escapeHtml(state.episodeLog[i].challenge) : "—"}</th>`).join("")}
+                      </tr>
+                      <tr>
+                        ${Array.from({length: state.episodeNumber}, (_, i) => `<th class="ep-mini">${state.episodeLog[i] ? escapeHtml(state.episodeLog[i].mini) : "—"}</th>`).join("")}
                       </tr>
                     </thead>
                     <tbody>
                       ${sortedQueens.map(q => `
                         <tr>
-                          <td class="qname-cell">${escapeHtml(q.name)}</td>
+                          <td class="qname-cell">
+                            <div class="qname-inner">
+                              <span class="qname-text">${escapeHtml(q.name)}</span>
+                              ${q.image ? `<img src="${q.image}" class="qname-img" onerror="this.style.display='none'">` : ""}
+                            </div>
+                          </td>
                           ${Array.from({length: state.episodeNumber}, (_, i) => {
                             let p = q.history[i];
                             if (!p) return `<td class="empty-cell"></td>`;
                             let cssClass = getTrackRecordClass(p);
-                            return `<td class="${cssClass}" style="font-weight: 900; font-size: 12px;">${p}</td>`;
+                            return `<td class="placement-cell ${cssClass}">${p}</td>`;
                           }).join("")}
-                          <td style="font-weight: 600;">${trackScore(q)}</td>
+                          <td class="score-cell">${trackScore(q)}</td>
                         </tr>
                       `).join("")}
                     </tbody>
@@ -3307,18 +3359,18 @@ if (state.seasonFormat === "tournament-of-all-stars") {
                         ${sortedQueens.map(q => `
                           <tr>
                             <td class="qname-cell">
-                            <div style="display:flex; align-items:center; gap:10px;">
-                              <span>${escapeHtml(q.name)}</span>
-                              ${q.image ? `<img src="${q.image}" style="width:42px; height:42px; border-radius:50%; object-fit:cover; border:2px solid var(--border); flex-shrink:0;" onerror="this.style.display='none'">` : ""}
-                            </div>
-                          </td>
+                              <div class="qname-inner">
+                                <span class="qname-text">${escapeHtml(q.name)}</span>
+                                ${q.image ? `<img src="${q.image}" class="qname-img" onerror="this.style.display='none'">` : ""}
+                              </div>
+                            </td>
                             ${Array.from({length: state.episodeNumber}, (_, i) => {
                               let p = q.history[i];
                               if (!p) return `<td class="empty-cell"></td>`;
                               let cssClass = getTrackRecordClass(p);
-                              return `<td class="${cssClass}" style="font-weight: 900; font-size: 12px;">${p}</td>`;
+                              return `<td class="placement-cell ${cssClass}">${p}</td>`;
                             }).join("")}
-                            <td style="font-weight: 600;">${trackScore(q)}</td>
+                            <td class="score-cell">${trackScore(q)}</td>
                           </tr>
                         `).join("")}
                       </tbody>
