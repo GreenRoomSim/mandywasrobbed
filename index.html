@@ -278,6 +278,13 @@
       min-width: 76px;
       max-width: 76px;
     }
+    /* Tournament episode column — wider to fit compound labels like WIN + ADV */
+    .standings-table th.ep-col-tournament,
+    .standings-table td.ep-data-cell-tournament {
+      width: 76px;
+      min-width: 76px;
+      max-width: 76px;
+    }
     /* Finale episode column — widest */
     .standings-table th.ep-col-finale,
     .standings-table td.ep-data-cell-finale {
@@ -1240,12 +1247,12 @@
     function getTrackRecordLabel(p) {
         if (!p) return "";
         if (p === "T_WIN")       return "WIN";
-        if (p === "T_WIN_ADV")   return "WIN";
-        if (p === "T_WIN2_ADV")  return "WIN";
-        if (p === "T_SAFE_ADV")  return "SAFE";
-        if (p === "T_SAFE_ELIM") return "SAFE";
-        if (p === "T_WIN2_ELIM") return "WIN";
-        if (p === "T_WIN_ELIM")  return "WIN";
+        if (p === "T_WIN_ADV")   return "WIN + ADV";
+        if (p === "T_WIN2_ADV")  return "WIN + ADV";
+        if (p === "T_SAFE_ADV")  return "SAFE + ADV";
+        if (p === "T_SAFE_ELIM") return "SAFE + ELIM";
+        if (p === "T_WIN2_ELIM") return "WIN + ELIM";
+        if (p === "T_WIN_ELIM")  return "WIN + ELIM";
         return p;
     }
 
@@ -3568,8 +3575,49 @@ if (state.seasonFormat === "tournament-of-all-stars") {
         if ((isGG && state.phase === 4) || (isMerge && state.phase === 4) || (!isGG && !isLaLa && !isMerge && state.phase === 3) || (isTop1Format && state.phase === 3)) {
             let tops = isTop2Format ? [...p.topTwo, ...p.highQueens] : (isTop1Format ? [...p.topOne, ...p.highQueens] : [...p.winners, ...p.highQueens]);
             let bottoms = p.bottomThree ? [...p.bottomThree] : [...(p.savedLow ? [p.savedLow] : []), ...(p.bottomTwo || [])];
-            
-            // ... (Keep the rest of the dropdown HTML building code inside here exactly the same) ...
+
+            let winnerHtml = "";
+            if (isGG) {
+                // Girl Group: winning team is already decided, only rig the saved (low) queen
+                winnerHtml = "";
+            } else if (isTop2Format) {
+                let topOptions = tops.map(q => `<option value="${q.id}">${escapeHtml(q.name)}</option>`).join('');
+                winnerHtml = `
+                    <label class="field">Top Queen 1: <select id="rigTop1">${topOptions}</select></label>
+                    <label class="field">Top Queen 2: <select id="rigTop2">${topOptions}</select></label>
+                `;
+            } else if (isTop1Format) {
+                let topOptions = tops.map(q => `<option value="${q.id}">${escapeHtml(q.name)}</option>`).join('');
+                winnerHtml = `<label class="field">Winner: <select id="rigTop1">${topOptions}</select></label>`;
+            } else {
+                let isDoubleWin = p.winners && p.winners.length > 1;
+                let topOptions = tops.map(q => `<option value="${q.id}">${escapeHtml(q.name)}</option>`).join('');
+                if (isDoubleWin) {
+                    winnerHtml = `
+                        <label class="field">Winner 1: <select id="rigWin">${topOptions}</select></label>
+                        <label class="field">Winner 2: <select id="rigWin2">${topOptions}</select></label>
+                    `;
+                } else {
+                    winnerHtml = `<label class="field">Winner: <select id="rigWin">${topOptions}</select></label>`;
+                }
+            }
+
+            // Show saved-low picker only when there are actual bottoms and it's an elimination episode
+            const isTop2Premiere = state.episodeNumber === 1 && state.premiereFormat === "top2";
+            const isNoElimPremiere = state.episodeNumber === 1 && state.premiereFormat === "no-elim";
+            const hasBottoms = bottoms.length > 1 && !state.episodeData.isMidSeasonNonElim && !isTop2Premiere && !isNoElimPremiere;
+            let bottomHtml = "";
+            if (hasBottoms) {
+                let btmOptions = bottoms.map(q =>
+                    `<option value="${q.id}" ${p.savedLow && q.id == p.savedLow.id ? 'selected' : ''}>${escapeHtml(q.name)}</option>`
+                ).join('');
+                bottomHtml = `<label class="field">Low queen (safe from BTM2): <select id="rigSave">${btmOptions}</select></label>`;
+            }
+
+            html = winnerHtml + bottomHtml;
+            el.rigModal.dataset.rigType = "ep3";
+            el.rigContent.innerHTML = html;
+            el.rigModal.classList.remove("hidden");
 
         // Update the Phase 5 / Phase 6 Lip Sync checks
         } else if ((isGG && state.phase === 6) || (isLaLa && state.phase === 6) || (isTop1Format && state.phase === 6) || (isMerge && state.phase === 6) || (!isGG && !isLaLa && !isTop1Format && !isMerge && state.phase === 5)) {
