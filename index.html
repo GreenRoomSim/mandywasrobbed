@@ -1295,12 +1295,14 @@
       const type = (state.episodeLog[i] && state.episodeLog[i].type) || "regular";
       if (type === "lala") return "ep-col-lala";
       if (type === "finale") return "ep-col-finale";
+      if (type === "tournament") return "ep-col-tournament";
       return "ep-col";
     }
     function epDataCellClass(i) {
       const type = (state.episodeLog[i] && state.episodeLog[i].type) || "regular";
       if (type === "lala") return "ep-data-cell ep-data-cell-lala";
       if (type === "finale") return "ep-data-cell ep-data-cell-finale";
+      if (type === "tournament") return "ep-data-cell ep-data-cell-tournament";
       return "ep-data-cell";
     }
 
@@ -1817,6 +1819,15 @@ if (state.seasonFormat === "tournament-of-all-stars") {
             });
 
             d.countsApplied = true;
+
+            // Log this bracket episode's challenge so the track record header shows correctly
+            if (!state.episodeLog[state.episodeNumber - 1]) {
+                state.episodeLog[state.episodeNumber - 1] = {
+                    challenge: d.maxi.name,
+                    mini: "—",
+                    type: "tournament"
+                };
+            }
         }
 
         content = `
