@@ -219,6 +219,15 @@
     .bg-elim { background: #883131 !important; color: #ffffff !important; border: none;
     }
     
+    /* Tournament of All Stars — expanded placements */
+    .bg-t_win    { background: #00bfff !important; color: #000000 !important; border: none; font-weight: bold; } /* Top 2, didn't win LS */
+    .bg-t_win_adv  { background: #0a53a8 !important; color: #ffffff !important; border: none; font-weight: bold; } /* LS winner + advanced */
+    .bg-t_win2_adv { background: #00bfff !important; color: #000000 !important; border: none; font-weight: bold; } /* LS loser + advanced */
+    .bg-t_safe_adv { background: #ffffff !important; color: #000000 !important; border: 1px solid var(--border); }  /* Safe + advanced */
+    .bg-t_safe_elim { background: #651b1b !important; color: #ffffff !important; border: none; } /* Safe + eliminated */
+    .bg-t_win2_elim { background: #7a1b1b !important; color: #ffffff !important; border: none; font-weight: bold; } /* LS loser + eliminated */
+    .bg-t_win_elim  { background: #4f0f0f !important; color: #ffffff !important; border: none; font-weight: bold; } /* LS winner + eliminated */
+
     .bg-shantay { background: #dcf3cd !important; color: #14380e !important; border: none;
     }
     .bg-winner { background: #f1c232 !important; color: #000000 !important; border: none;
@@ -1216,7 +1225,28 @@
         if (p === "WON R1") return "bg-won-r1";
         if (p === "WON R2") return "bg-won-r2";
         if (p === "WON R3") return "bg-won-r3";
+        // TOAS expanded placements
+        if (p === "T_WIN")       return "bg-t_win";
+        if (p === "T_WIN_ADV")   return "bg-t_win_adv";
+        if (p === "T_WIN2_ADV")  return "bg-t_win2_adv";
+        if (p === "T_SAFE_ADV")  return "bg-t_safe_adv";
+        if (p === "T_SAFE_ELIM") return "bg-t_safe_elim";
+        if (p === "T_WIN2_ELIM") return "bg-t_win2_elim";
+        if (p === "T_WIN_ELIM")  return "bg-t_win_elim";
         return `bg-${p.toLowerCase()}`;
+    }
+
+    // Maps internal history codes to human-readable track record labels
+    function getTrackRecordLabel(p) {
+        if (!p) return "";
+        if (p === "T_WIN")       return "WIN";
+        if (p === "T_WIN_ADV")   return "WIN";
+        if (p === "T_WIN2_ADV")  return "WIN";
+        if (p === "T_SAFE_ADV")  return "SAFE";
+        if (p === "T_SAFE_ELIM") return "SAFE";
+        if (p === "T_WIN2_ELIM") return "WIN";
+        if (p === "T_WIN_ELIM")  return "WIN";
+        return p;
     }
 
     function randomizeQueenForm() {
@@ -1801,7 +1831,8 @@ if (state.seasonFormat === "tournament-of-all-stars") {
         </div></div>`;
     } else if (p === 8) {
         if (!d.countsApplied) {
-            d.top2.forEach(q => { state.tournamentPoints[q.id] += 2; q.history[state.episodeNumber - 1] = "TOP 2"; });
+            // All top 2 start as "T_WIN" (LS loser colour); LS winner overridden below
+            d.top2.forEach(q => { state.tournamentPoints[q.id] += 2; q.history[state.episodeNumber - 1] = "T_WIN"; });
             d.safes.forEach(q => { q.history[state.episodeNumber - 1] = "SAFE"; });
 
             if (d.lipSync.isDoubleWin) {
@@ -1811,12 +1842,24 @@ if (state.seasonFormat === "tournament-of-all-stars") {
                 d.top2[1].history[state.episodeNumber - 1] = "WIN";
             } else {
                 state.tournamentPoints[d.lipSync.winners[0].id] += 1;
-                d.lipSync.winners[0].history[state.episodeNumber - 1] = "WIN";
+                d.lipSync.winners[0].history[state.episodeNumber - 1] = "WIN"; // overrides T_WIN set above
             }
 
             d.votes.forEach(v => {
                 state.tournamentPoints[v.chosen.id] += 1;
             });
+
+            // For non-bracketEnd episodes, update track record scores now.
+            // BracketEnd episodes defer record updates to phase 9 (once advance/elim is known).
+            if (!d.bracketEnd) {
+                if (d.lipSync.isDoubleWin) {
+                    d.top2.forEach(q => { q.record.WIN += 1; }); // both WIN → 5pts each
+                } else {
+                    d.lipSync.winners[0].record.WIN += 1; // WIN → 5pts
+                    d.lipSync.loser.record.WIN += 1;      // T_WIN also = 5pts
+                }
+                d.safes.forEach(q => { q.record.SAFE += 1; }); // SAFE → 3pts
+            }
 
             d.countsApplied = true;
 
@@ -1889,11 +1932,45 @@ if (state.seasonFormat === "tournament-of-all-stars") {
         let eliminated = sorted.slice(3);
 
         if (!d.eliminationsApplied) {
+            // Determine LS result for this bracket-end episode
+            const lsWinnerId = d.lipSync.isDoubleWin ? null : d.lipSync.winners[0].id;
+            const top2Ids = new Set(d.top2.map(q => q.id));
+
+            advancers.forEach(q => {
+                const isTop2 = top2Ids.has(q.id);
+                // In a double win, both top2 queens share LS winner status
+                const isLsWinner = d.lipSync.isDoubleWin ? isTop2 : (q.id === lsWinnerId);
+
+                if (!isTop2) {
+                    q.history[state.episodeNumber - 1] = "T_SAFE_ADV";
+                    q.record.SAFE += 1; // 3pts
+                } else if (isLsWinner) {
+                    q.history[state.episodeNumber - 1] = "T_WIN_ADV";
+                    q.record.WIN += 1; // 5pts
+                } else {
+                    q.history[state.episodeNumber - 1] = "T_WIN2_ADV";
+                    q.record.WIN += 1; // 5pts
+                }
+            });
+
             eliminated.forEach(q => {
                 q.eliminated = true;
                 q.elimOrder = state.episodeNumber;
-                q.history[state.episodeNumber - 1] = "ELIM";
+                const isTop2 = top2Ids.has(q.id);
+                const isLsWinner = d.lipSync.isDoubleWin ? isTop2 : (q.id === lsWinnerId);
+
+                if (!isTop2) {
+                    q.history[state.episodeNumber - 1] = "T_SAFE_ELIM";
+                    q.record.SAFE += 1; // 3pts
+                } else if (isLsWinner) {
+                    q.history[state.episodeNumber - 1] = "T_WIN_ELIM";
+                    q.record.WIN += 1; // 5pts
+                } else {
+                    q.history[state.episodeNumber - 1] = "T_WIN2_ELIM";
+                    q.record.WIN += 1; // 5pts
+                }
             });
+
             d.eliminationsApplied = true;
         }
 
@@ -2851,7 +2928,7 @@ if (state.seasonFormat === "tournament-of-all-stars") {
                             let p = q.history[i];
                             if (!p) return `<td class="${epDataCellClass(i)} empty-cell"></td>`;
                             let cssClass = getTrackRecordClass(p);
-                            return `<td class="${epDataCellClass(i)} placement-cell ${cssClass}">${p}</td>`;
+                            return `<td class="${epDataCellClass(i)} placement-cell ${cssClass}">${getTrackRecordLabel(p)}</td>`;
                           }).join("")}
                           <td class="score-cell">${trackScore(q)}</td>
                         </tr>
@@ -3147,7 +3224,7 @@ if (state.seasonFormat === "tournament-of-all-stars") {
                               let p = q.history[i];
                               if (!p) return `<td class="${epDataCellClass(i)} empty-cell"></td>`;
                               let cssClass = getTrackRecordClass(p);
-                              return `<td class="${epDataCellClass(i)} placement-cell ${cssClass}">${p}</td>`;
+                              return `<td class="${epDataCellClass(i)} placement-cell ${cssClass}">${getTrackRecordLabel(p)}</td>`;
                             }).join("")}
                             <td class="score-cell">${trackScore(q)}</td>
                           </tr>
@@ -3306,7 +3383,7 @@ if (state.seasonFormat === "tournament-of-all-stars") {
                             let p = q.history[i];
                             if (!p) return `<td class="${epDataCellClass(i)} empty-cell"></td>`;
                             let cssClass = getTrackRecordClass(p);
-                            return `<td class="${epDataCellClass(i)} placement-cell ${cssClass}">${p}</td>`;
+                            return `<td class="${epDataCellClass(i)} placement-cell ${cssClass}">${getTrackRecordLabel(p)}</td>`;
                           }).join("")}
                           <td class="score-cell">${trackScore(q)}</td>
                         </tr>
@@ -3441,7 +3518,7 @@ if (state.seasonFormat === "tournament-of-all-stars") {
                               let p = q.history[i];
                               if (!p) return `<td class="${epDataCellClass(i)} empty-cell"></td>`;
                               let cssClass = getTrackRecordClass(p);
-                              return `<td class="${epDataCellClass(i)} placement-cell ${cssClass}">${p}</td>`;
+                              return `<td class="${epDataCellClass(i)} placement-cell ${cssClass}">${getTrackRecordLabel(p)}</td>`;
                             }).join("")}
                             <td class="score-cell">${trackScore(q)}</td>
                           </tr>
