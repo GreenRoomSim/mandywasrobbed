@@ -3765,8 +3765,28 @@ if (state.seasonFormat === "tournament-of-all-stars") {
             el.rigModal.classList.add("hidden");
         } 
         else if (rt === "ep5") {
-            state.episodeData.riggedOutcome = document.getElementById("rigLipSync").value;
+            const rigVal = document.getElementById("rigLipSync").value;
+            state.episodeData.riggedOutcome = rigVal;
             if (!state.episodeData.isLaLaPaRuza) {
+                state.episodeData.elimination = null;
+            }
+            // For LSA: directly apply the rig to data.lipSync so lsa_elim reads the correct winner
+            if (state.seasonFormat === "all-stars-assassin" && state.episodeData.lipSync) {
+                let p1 = state.episodeData.placements.topOne[0];
+                let p2 = state.episodeData.lsaData.lsa;
+                if (rigVal === "w1") {
+                    state.episodeData.lipSync.winner = { queen: p1, event: state.episodeData.lipSync.performances[0].event };
+                    state.episodeData.lipSync.loser  = { queen: p2, event: state.episodeData.lipSync.performances[1].event };
+                } else if (rigVal === "w2") {
+                    state.episodeData.lipSync.winner = { queen: p2, event: state.episodeData.lipSync.performances[1].event };
+                    state.episodeData.lipSync.loser  = { queen: p1, event: state.episodeData.lipSync.performances[0].event };
+                }
+                // Re-evaluate whether a tie-breaker is still needed after the rig
+                if (state.episodeData.lipSync.winner.queen.name === p2.name && state.episodeData.lsaData.isTie) {
+                    state.episodeData.lsaData.tieBreakerNeeded = true;
+                } else {
+                    state.episodeData.lsaData.tieBreakerNeeded = false;
+                }
                 state.episodeData.elimination = null;
             }
             el.rigModal.classList.add("hidden");
@@ -3776,56 +3796,64 @@ if (state.seasonFormat === "tournament-of-all-stars") {
             const f = state.finaleData;
             if (rt === "fin_top4_s1") {
                 let wid = document.getElementById("rigSemi1").value;
+                const finEpIdx = state.episodeNumber - 1;
                 if (wid != f.semi1.winner.id) { 
                     let temp = f.semi1.winner;
                     f.semi1.winner = f.semi1.loser; f.semi1.loser = temp;
                     f.semi1.loser.elimOrder = state.episodeNumber + 1; f.semi1.winner.elimOrder = 999;
-                    f.semi1.loser.history[state.episodeNumber] = "ELIM"; f.semi1.winner.history[state.episodeNumber] = undefined;
+                    f.semi1.loser.history[finEpIdx] = "ELIM"; f.semi1.winner.history[finEpIdx] = undefined;
+                    f.final.loser.history[finEpIdx] = undefined; f.final.winner.history[finEpIdx] = undefined;
                     f.final = makeMatch(f.semi1.winner, f.semi2.winner);
                     f.final.loser.elimOrder = state.episodeNumber + 2; f.final.winner.elimOrder = 999;
-                    f.final.loser.history[state.episodeNumber] = "RUNNER UP"; f.final.winner.history[state.episodeNumber] = "WINNER";
+                    f.final.loser.history[finEpIdx] = "RUNNER UP"; f.final.winner.history[finEpIdx] = "WINNER";
                 }
             } else if (rt === "fin_top4_s2") {
                 let wid = document.getElementById("rigSemi2").value;
+                const finEpIdx = state.episodeNumber - 1;
                 if (wid != f.semi2.winner.id) { 
                     let temp = f.semi2.winner;
                     f.semi2.winner = f.semi2.loser; f.semi2.loser = temp;
                     f.semi2.loser.elimOrder = state.episodeNumber + 1; f.semi2.winner.elimOrder = 999;
-                    f.semi2.loser.history[state.episodeNumber] = "ELIM"; f.semi2.winner.history[state.episodeNumber] = undefined;
+                    f.semi2.loser.history[finEpIdx] = "ELIM"; f.semi2.winner.history[finEpIdx] = undefined;
+                    f.final.loser.history[finEpIdx] = undefined; f.final.winner.history[finEpIdx] = undefined;
                     f.final = makeMatch(f.semi1.winner, f.semi2.winner);
                     f.final.loser.elimOrder = state.episodeNumber + 2; f.final.winner.elimOrder = 999;
-                    f.final.loser.history[state.episodeNumber] = "RUNNER UP"; f.final.winner.history[state.episodeNumber] = "WINNER";
+                    f.final.loser.history[finEpIdx] = "RUNNER UP"; f.final.winner.history[finEpIdx] = "WINNER";
                 }
             } else if (rt === "fin_top4_fin" || rt === "fin_top3_fin") {
                 let wid = document.getElementById("rigFin").value;
+                const finEpIdx = state.episodeNumber - 1;
                 if (wid != f.final.winner.id) { 
                     let temp = f.final.winner;
                     f.final.winner = f.final.loser; f.final.loser = temp;
                     f.final.loser.elimOrder = state.episodeNumber + 2; f.final.winner.elimOrder = 999;
-                    f.final.loser.history[state.episodeNumber] = "RUNNER UP";
-                    f.final.winner.history[state.episodeNumber] = "WINNER";
+                    f.final.loser.history[finEpIdx] = "RUNNER UP";
+                    f.final.winner.history[finEpIdx] = "WINNER";
                 }
             } else if (rt === "fin_top3_3rd") {
                 let tid = document.getElementById("rigThird").value;
+                const finEpIdx = state.episodeNumber - 1;
                 if (tid != f.thirdPlace.id) {
                     f.thirdPlace.elimOrder = 999;
-                    f.thirdPlace.history[state.episodeNumber] = undefined;
+                    f.thirdPlace.history[finEpIdx] = undefined;
                     f.thirdPlace = f.finalists.find(q => q.id == tid);
-                    f.thirdPlace.elimOrder = state.episodeNumber + 1; f.thirdPlace.history[state.episodeNumber] = "ELIM";
+                    f.thirdPlace.elimOrder = state.episodeNumber + 1; f.thirdPlace.history[finEpIdx] = "ELIM";
                     let top2 = f.finalists.filter(q => q.id != tid);
+                    f.final.loser.history[finEpIdx] = undefined; f.final.winner.history[finEpIdx] = undefined;
                     f.final = makeMatch(top2[0], top2[1]);
                     f.final.loser.elimOrder = state.episodeNumber + 2; f.final.winner.elimOrder = 999;
-                    f.final.loser.history[state.episodeNumber] = "RUNNER UP"; f.final.winner.history[state.episodeNumber] = "WINNER";
+                    f.final.loser.history[finEpIdx] = "RUNNER UP"; f.final.winner.history[finEpIdx] = "WINNER";
                 }
               } else if (rt === "fin_top3_3rd") {
                 // ... Existing Top 3 rigging code ...
             } else if (rt === "fin_toas_qf") {
                 let changed = false;
+                const finEpIdx = state.episodeNumber - 1;
                 const swapMatch = (match, newWinId) => {
                     if (newWinId != match.winner.id) {
                         let temp = match.winner; match.winner = match.loser; match.loser = temp;
                         match.loser.elimOrder = state.episodeNumber + 1; match.winner.elimOrder = 999;
-                        match.loser.history[state.episodeNumber] = "ELIM"; match.winner.history[state.episodeNumber] = undefined;
+                        match.loser.history[finEpIdx] = "ELIM"; match.winner.history[finEpIdx] = undefined;
                         return true;
                     } return false;
                 };
@@ -3835,38 +3863,44 @@ if (state.seasonFormat === "tournament-of-all-stars") {
                 if (swapMatch(f.qf4, document.getElementById("rigQf4").value)) changed = true;
 
                 if (changed) {
+                    if (f.sf1) { f.sf1.loser.history[finEpIdx] = undefined; }
+                    if (f.sf2) { f.sf2.loser.history[finEpIdx] = undefined; }
+                    if (f.final) { f.final.loser.history[finEpIdx] = undefined; f.final.winner.history[finEpIdx] = undefined; }
                     f.sf1 = makeMatch(f.qf1.winner, f.qf2.winner); f.sf2 = makeMatch(f.qf3.winner, f.qf4.winner);
                     f.sf1.loser.elimOrder = state.episodeNumber + 2; f.sf1.winner.elimOrder = 999;
-                    f.sf1.loser.history[state.episodeNumber] = "ELIM";
+                    f.sf1.loser.history[finEpIdx] = "ELIM";
                     f.sf2.loser.elimOrder = state.episodeNumber + 2; f.sf2.winner.elimOrder = 999;
-                    f.sf2.loser.history[state.episodeNumber] = "ELIM";
+                    f.sf2.loser.history[finEpIdx] = "ELIM";
                     f.final = makeMatch(f.sf1.winner, f.sf2.winner);
                     f.final.loser.elimOrder = state.episodeNumber + 3; f.final.winner.elimOrder = 999;
-                    f.final.loser.history[state.episodeNumber] = "RUNNER UP"; f.final.winner.history[state.episodeNumber] = "WINNER";
+                    f.final.loser.history[finEpIdx] = "RUNNER UP"; f.final.winner.history[finEpIdx] = "WINNER";
                 }
             } else if (rt === "fin_toas_sf") {
                 let changed = false;
+                const finEpIdx = state.episodeNumber - 1;
                 const swapSf = (match, newWinId) => {
                     if (newWinId != match.winner.id) {
                         let temp = match.winner; match.winner = match.loser; match.loser = temp;
                         match.loser.elimOrder = state.episodeNumber + 2; match.winner.elimOrder = 999;
-                        match.loser.history[state.episodeNumber] = "ELIM"; match.winner.history[state.episodeNumber] = undefined;
+                        match.loser.history[finEpIdx] = "ELIM"; match.winner.history[finEpIdx] = undefined;
                         return true;
                     } return false;
                 };
                 if (swapSf(f.sf1, document.getElementById("rigSf1").value)) changed = true;
                 if (swapSf(f.sf2, document.getElementById("rigSf2").value)) changed = true;
                 if (changed) {
+                    if (f.final) { f.final.loser.history[finEpIdx] = undefined; f.final.winner.history[finEpIdx] = undefined; }
                     f.final = makeMatch(f.sf1.winner, f.sf2.winner);
                     f.final.loser.elimOrder = state.episodeNumber + 3; f.final.winner.elimOrder = 999;
-                    f.final.loser.history[state.episodeNumber] = "RUNNER UP"; f.final.winner.history[state.episodeNumber] = "WINNER";
+                    f.final.loser.history[finEpIdx] = "RUNNER UP"; f.final.winner.history[finEpIdx] = "WINNER";
                 }
             } else if (rt === "fin_toas_fin") {
                 let wid = document.getElementById("rigFin").value;
+                const finEpIdx = state.episodeNumber - 1;
                 if (wid != f.final.winner.id) {
                     let temp = f.final.winner; f.final.winner = f.final.loser; f.final.loser = temp;
                     f.final.loser.elimOrder = state.episodeNumber + 3; f.final.winner.elimOrder = 999;
-                    f.final.loser.history[state.episodeNumber] = "RUNNER UP"; f.final.winner.history[state.episodeNumber] = "WINNER";
+                    f.final.loser.history[finEpIdx] = "RUNNER UP"; f.final.winner.history[finEpIdx] = "WINNER";
                 }
             }
             el.rigModal.classList.add("hidden");
