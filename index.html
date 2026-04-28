@@ -364,16 +364,17 @@
       height: 52px;
       max-height: 52px;
     }
-    /* Compound TOAS labels (e.g. WIN + ADV) — small, wrappable, never expand the cell */
+    /* Compound TOAS labels (e.g. WIN + ADV) — readable 2-line wrap, never expand the cell */
     .standings-table td.placement-cell .compound-placement {
       display: block;
-      font-size: 8px;
+      font-size: 10px;
       font-weight: 800;
-      line-height: 1.25;
+      line-height: 1.3;
       white-space: normal;
-      word-break: break-word;
+      word-break: normal;
       overflow: hidden;
-      padding: 0 1px;
+      padding: 0 2px;
+      text-align: center;
     }
     .standings-table td.score-cell {
       font-weight: 700;
@@ -1260,12 +1261,12 @@
     function getTrackRecordLabel(p) {
         if (!p) return "";
         if (p === "T_WIN")       return "WIN";
-        if (p === "T_WIN_ADV")   return `<span class="compound-placement">WIN + ADV</span>`;
-        if (p === "T_WIN2_ADV")  return `<span class="compound-placement">WIN + ADV</span>`;
-        if (p === "T_SAFE_ADV")  return `<span class="compound-placement">SAFE + ADV</span>`;
-        if (p === "T_SAFE_ELIM") return `<span class="compound-placement">SAFE + ELIM</span>`;
-        if (p === "T_WIN2_ELIM") return `<span class="compound-placement">WIN + ELIM</span>`;
-        if (p === "T_WIN_ELIM")  return `<span class="compound-placement">WIN + ELIM</span>`;
+        if (p === "T_WIN_ADV")   return `<span class="compound-placement">WIN<br>+ ADV</span>`;
+        if (p === "T_WIN2_ADV")  return `<span class="compound-placement">WIN<br>+ ADV</span>`;
+        if (p === "T_SAFE_ADV")  return `<span class="compound-placement">SAFE<br>+ ADV</span>`;
+        if (p === "T_SAFE_ELIM") return `<span class="compound-placement">SAFE<br>+ ELIM</span>`;
+        if (p === "T_WIN2_ELIM") return `<span class="compound-placement">WIN<br>+ ELIM</span>`;
+        if (p === "T_WIN_ELIM")  return `<span class="compound-placement">WIN<br>+ ELIM</span>`;
         return p;
     }
 
