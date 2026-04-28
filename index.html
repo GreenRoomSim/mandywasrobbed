@@ -230,6 +230,7 @@
 
     .bg-shantay { background: #dcf3cd !important; color: #14380e !important; border: none;
     }
+    .bg-return { background: #dd5219 !important; color: #ffffff !important; border: none; font-weight: bold; }
     .bg-winner { background: #f1c232 !important; color: #000000 !important; border: none;
     }
     .bg-runner { background: #c3c3c3 !important; color: #000000 !important; border: none;
@@ -617,7 +618,7 @@
           <img src="banner.png" alt="Drag Race Simulator Banner" class="main-logo" />
         </div>
       <h1 class="title">Greenroom Drag Race Simulator</h1>
-      <p class="subtitle">Pre-Release v2.1.0 - Last Updated 26/4/26</p>
+      <p class="subtitle">Release v2.0.0 - Last Updated 26/4/26</p>
       
       <div class="button-row" style="margin-top: 16px;">
         <button id="preDefBtn" class="primary" style="padding: 8px 16px; font-size: 14px;">Pre-Defined Casts</button>
@@ -1254,6 +1255,7 @@
         if (p === "T_SAFE_ELIM") return "bg-t_safe_elim";
         if (p === "T_WIN2_ELIM") return "bg-t_win2_elim";
         if (p === "T_WIN_ELIM")  return "bg-t_win_elim";
+        if (p === "RETURN")      return "bg-return";
         return `bg-${p.toLowerCase()}`;
     }
 
