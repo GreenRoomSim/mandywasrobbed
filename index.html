@@ -1482,15 +1482,18 @@ if (state.seasonFormat === "tournament-of-all-stars") {
             }))
             .sort((a, b) => b.score - a.score);
 
+        const mn = scores.length;
         const winner = [scores[0].queen];
         const high = [scores[1].queen, scores[2].queen];
-        const safeQueens = scores.slice(3, scores.length - 2).map(s => s.queen);
-        const bottomTwo = scores.slice(scores.length - 2).map(s => s.queen);
+        const bottomTwo = [scores[mn - 2].queen, scores[mn - 1].queen];
+        const mergeSavedLow = mn >= 6 ? scores[mn - 3].queen : null;
+        const safeQueens = scores.slice(3, mergeSavedLow ? mn - 3 : mn - 2).map(s => s.queen);
 
         const categories = new Map();
         winner.forEach(q => categories.set(q.id, "Slayed"));
         high.forEach(q => categories.set(q.id, "Great"));
         safeQueens.forEach(q => categories.set(q.id, "Okay"));
+        if (mergeSavedLow) categories.set(mergeSavedLow.id, "Bad");
         bottomTwo.forEach(q => categories.set(q.id, "Flopped"));
 
         state.episodeData = {
@@ -1503,7 +1506,7 @@ if (state.seasonFormat === "tournament-of-all-stars") {
                 winners: winner,
                 highQueens: high,
                 pureSafe: safeQueens,
-                savedLow: null,
+                savedLow: mergeSavedLow,
                 bottomTwo
             },
             countsApplied: false,
@@ -1523,20 +1526,23 @@ if (state.seasonFormat === "tournament-of-all-stars") {
 
         let winner = [scores[0].queen];
         let high = [scores[1].queen, scores[2].queen];
-        let btm2 = [scores[scores.length-2].queen, scores[scores.length-1].queen];
-        let pureSafe = scores.slice(3, scores.length-2).map(s => s.queen);
+        const sn = scores.length;
+        let btm2 = [scores[sn - 2].queen, scores[sn - 1].queen];
+        let semiSavedLow = sn >= 6 ? scores[sn - 3].queen : null;
+        let pureSafe = scores.slice(3, semiSavedLow ? sn - 3 : sn - 2).map(s => s.queen);
 
         let categories = new Map();
         winner.forEach(q => categories.set(q.id, "Slayed"));
         high.forEach(q => categories.set(q.id, "Great"));
         pureSafe.forEach(q => categories.set(q.id, "Okay"));
+        if (semiSavedLow) categories.set(semiSavedLow.id, "Bad");
         btm2.forEach(q => categories.set(q.id, "Flopped"));
 
         state.wildcardQueen = pick(state.queens.filter(q => q.eliminated));
 
         state.episodeData = {
             isTournamentSemi: true, mini: getMiniChallenge(ep, 8), maxi, scores, categories,
-            placements: { winners: winner, highQueens: high, pureSafe, savedLow: null, bottomTwo: btm2 },
+            placements: { winners: winner, highQueens: high, pureSafe, savedLow: semiSavedLow, bottomTwo: btm2 },
             countsApplied: false, lipSync: null, elimination: null, wildcard: state.wildcardQueen
         };
         return;
@@ -3509,7 +3515,8 @@ if (state.seasonFormat === "tournament-of-all-stars") {
               if (!state.episodeLog[_finIdx5]) state.episodeLog[_finIdx5] = { challenge: "Finale", mini: "—", type: "finale" };
               else state.episodeLog[_finIdx5].type = "finale";
               content = `
-                  </div>
+                <div class="section-card" id="finaleTrackRecord" style="text-align: left; padding: 24px; background: white;">
+                  <div style="display:flex; gap: 8px; margin-bottom: 16px;"><span class="pill">Final Track Record</span></div>
                   <h2 style="font-size: 24px; font-weight: 900; margin: 0 0 16px; text-align: center;">Final Season Standings</h2>
                   <div style="overflow-x: auto;">
                     <table class="standings-table">
@@ -3619,7 +3626,7 @@ if (state.seasonFormat === "tournament-of-all-stars") {
             // Show saved-low picker only when there are actual bottoms and it's an elimination episode
             const isTop2Premiere = state.episodeNumber === 1 && state.premiereFormat === "top2";
             const isNoElimPremiere = state.episodeNumber === 1 && state.premiereFormat === "no-elim";
-            const hasBottoms = bottoms.length > 1 && !state.episodeData.isMidSeasonNonElim && !isTop2Premiere && !isNoElimPremiere;
+            const hasBottoms = bottoms.length >= 3 && !state.episodeData.isMidSeasonNonElim && !isTop2Premiere && !isNoElimPremiere;
             let bottomHtml = "";
             if (hasBottoms) {
                 let btmOptions = bottoms.map(q =>
@@ -3798,12 +3805,17 @@ if (state.seasonFormat === "tournament-of-all-stars") {
             if (rt === "fin_top4_s1") {
                 let wid = document.getElementById("rigSemi1").value;
                 const finEpIdx = state.episodeNumber - 1;
-                if (wid != f.semi1.winner.id) { 
+                if (wid != f.semi1.winner.id) {
+                    // Clear all downstream histories FIRST to avoid overwrite bugs
+                    f.final.loser.history[finEpIdx] = undefined;
+                    f.final.winner.history[finEpIdx] = undefined;
+                    f.semi1.winner.history[finEpIdx] = undefined;
+                    // Swap semi1
                     let temp = f.semi1.winner;
                     f.semi1.winner = f.semi1.loser; f.semi1.loser = temp;
                     f.semi1.loser.elimOrder = state.episodeNumber + 1; f.semi1.winner.elimOrder = 999;
-                    f.semi1.loser.history[finEpIdx] = "ELIM"; f.semi1.winner.history[finEpIdx] = undefined;
-                    f.final.loser.history[finEpIdx] = undefined; f.final.winner.history[finEpIdx] = undefined;
+                    f.semi1.loser.history[finEpIdx] = "ELIM";
+                    // Rebuild final
                     f.final = makeMatch(f.semi1.winner, f.semi2.winner);
                     f.final.loser.elimOrder = state.episodeNumber + 2; f.final.winner.elimOrder = 999;
                     f.final.loser.history[finEpIdx] = "RUNNER UP"; f.final.winner.history[finEpIdx] = "WINNER";
@@ -3811,12 +3823,17 @@ if (state.seasonFormat === "tournament-of-all-stars") {
             } else if (rt === "fin_top4_s2") {
                 let wid = document.getElementById("rigSemi2").value;
                 const finEpIdx = state.episodeNumber - 1;
-                if (wid != f.semi2.winner.id) { 
+                if (wid != f.semi2.winner.id) {
+                    // Clear all downstream histories FIRST
+                    f.final.loser.history[finEpIdx] = undefined;
+                    f.final.winner.history[finEpIdx] = undefined;
+                    f.semi2.winner.history[finEpIdx] = undefined;
+                    // Swap semi2
                     let temp = f.semi2.winner;
                     f.semi2.winner = f.semi2.loser; f.semi2.loser = temp;
                     f.semi2.loser.elimOrder = state.episodeNumber + 1; f.semi2.winner.elimOrder = 999;
-                    f.semi2.loser.history[finEpIdx] = "ELIM"; f.semi2.winner.history[finEpIdx] = undefined;
-                    f.final.loser.history[finEpIdx] = undefined; f.final.winner.history[finEpIdx] = undefined;
+                    f.semi2.loser.history[finEpIdx] = "ELIM";
+                    // Rebuild final
                     f.final = makeMatch(f.semi1.winner, f.semi2.winner);
                     f.final.loser.elimOrder = state.episodeNumber + 2; f.final.winner.elimOrder = 999;
                     f.final.loser.history[finEpIdx] = "RUNNER UP"; f.final.winner.history[finEpIdx] = "WINNER";
@@ -3835,21 +3852,30 @@ if (state.seasonFormat === "tournament-of-all-stars") {
                 let tid = document.getElementById("rigThird").value;
                 const finEpIdx = state.episodeNumber - 1;
                 if (tid != f.thirdPlace.id) {
-                    f.thirdPlace.elimOrder = 999;
-                    f.thirdPlace.history[finEpIdx] = undefined;
+                    // Step 1: Clear ALL old finale histories first to avoid overwrites
+                    const oldThirdPlace = f.thirdPlace;
+                    f.final.loser.history[finEpIdx] = undefined;
+                    f.final.winner.history[finEpIdx] = undefined;
+                    oldThirdPlace.history[finEpIdx] = undefined;
+                    oldThirdPlace.elimOrder = 999; // Will be overridden by makeMatch if in top2
+                    // Step 2: Assign new 3rd place
                     f.thirdPlace = f.finalists.find(q => q.id == tid);
-                    f.thirdPlace.elimOrder = state.episodeNumber + 1; f.thirdPlace.history[finEpIdx] = "ELIM";
+                    f.thirdPlace.elimOrder = state.episodeNumber + 1;
+                    f.thirdPlace.history[finEpIdx] = "ELIM";
+                    // Step 3: Rebuild final from remaining two
                     let top2 = f.finalists.filter(q => q.id != tid);
-                    f.final.loser.history[finEpIdx] = undefined; f.final.winner.history[finEpIdx] = undefined;
                     f.final = makeMatch(top2[0], top2[1]);
                     f.final.loser.elimOrder = state.episodeNumber + 2; f.final.winner.elimOrder = 999;
                     f.final.loser.history[finEpIdx] = "RUNNER UP"; f.final.winner.history[finEpIdx] = "WINNER";
                 }
-              } else if (rt === "fin_top3_3rd") {
-                // ... Existing Top 3 rigging code ...
             } else if (rt === "fin_toas_qf") {
-                let changed = false;
                 const finEpIdx = state.episodeNumber - 1;
+                // Step 1: Clear ALL SF and final histories FIRST to avoid overwrite bugs
+                if (f.sf1) { f.sf1.winner.history[finEpIdx] = undefined; f.sf1.loser.history[finEpIdx] = undefined; }
+                if (f.sf2) { f.sf2.winner.history[finEpIdx] = undefined; f.sf2.loser.history[finEpIdx] = undefined; }
+                if (f.final) { f.final.loser.history[finEpIdx] = undefined; f.final.winner.history[finEpIdx] = undefined; }
+                // Step 2: Swap QF results
+                let changed = false;
                 const swapMatch = (match, newWinId) => {
                     if (newWinId != match.winner.id) {
                         let temp = match.winner; match.winner = match.loser; match.loser = temp;
@@ -3862,11 +3888,8 @@ if (state.seasonFormat === "tournament-of-all-stars") {
                 if (swapMatch(f.qf2, document.getElementById("rigQf2").value)) changed = true;
                 if (swapMatch(f.qf3, document.getElementById("rigQf3").value)) changed = true;
                 if (swapMatch(f.qf4, document.getElementById("rigQf4").value)) changed = true;
-
+                // Step 3: Rebuild SF and final if anything changed
                 if (changed) {
-                    if (f.sf1) { f.sf1.loser.history[finEpIdx] = undefined; }
-                    if (f.sf2) { f.sf2.loser.history[finEpIdx] = undefined; }
-                    if (f.final) { f.final.loser.history[finEpIdx] = undefined; f.final.winner.history[finEpIdx] = undefined; }
                     f.sf1 = makeMatch(f.qf1.winner, f.qf2.winner); f.sf2 = makeMatch(f.qf3.winner, f.qf4.winner);
                     f.sf1.loser.elimOrder = state.episodeNumber + 2; f.sf1.winner.elimOrder = 999;
                     f.sf1.loser.history[finEpIdx] = "ELIM";
@@ -3877,8 +3900,13 @@ if (state.seasonFormat === "tournament-of-all-stars") {
                     f.final.loser.history[finEpIdx] = "RUNNER UP"; f.final.winner.history[finEpIdx] = "WINNER";
                 }
             } else if (rt === "fin_toas_sf") {
-                let changed = false;
                 const finEpIdx = state.episodeNumber - 1;
+                // Step 1: Clear final histories FIRST, and current SF winners (they'll be reassigned)
+                if (f.final) { f.final.loser.history[finEpIdx] = undefined; f.final.winner.history[finEpIdx] = undefined; }
+                f.sf1.winner.history[finEpIdx] = undefined;
+                f.sf2.winner.history[finEpIdx] = undefined;
+                // Step 2: Swap SF results
+                let sfChanged = false;
                 const swapSf = (match, newWinId) => {
                     if (newWinId != match.winner.id) {
                         let temp = match.winner; match.winner = match.loser; match.loser = temp;
@@ -3887,10 +3915,10 @@ if (state.seasonFormat === "tournament-of-all-stars") {
                         return true;
                     } return false;
                 };
-                if (swapSf(f.sf1, document.getElementById("rigSf1").value)) changed = true;
-                if (swapSf(f.sf2, document.getElementById("rigSf2").value)) changed = true;
-                if (changed) {
-                    if (f.final) { f.final.loser.history[finEpIdx] = undefined; f.final.winner.history[finEpIdx] = undefined; }
+                if (swapSf(f.sf1, document.getElementById("rigSf1").value)) sfChanged = true;
+                if (swapSf(f.sf2, document.getElementById("rigSf2").value)) sfChanged = true;
+                // Step 3: Rebuild final
+                if (sfChanged) {
                     f.final = makeMatch(f.sf1.winner, f.sf2.winner);
                     f.final.loser.elimOrder = state.episodeNumber + 3; f.final.winner.elimOrder = 999;
                     f.final.loser.history[finEpIdx] = "RUNNER UP"; f.final.winner.history[finEpIdx] = "WINNER";
