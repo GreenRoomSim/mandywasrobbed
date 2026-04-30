@@ -219,6 +219,7 @@
     .bg-elim { background: #883131 !important; color: #ffffff !important; border: none;
     }
     .bg-dept { background: #e2a9f1 !important; color: #000000 !important; border: none; font-weight: bold; }
+    .bg-disq { background: #484848 !important; color: #ffffff !important; border: none; font-weight: bold; }
     
     /* Tournament of All Stars — expanded placements (use standard base colors) */
     .bg-t_win    { background: #00bfff !important; color: #000000 !important; border: none; font-weight: bold; } /* Top 2 standalone (no outcome yet) */
@@ -673,6 +674,12 @@
   font-weight: 700;
 }
 
+.track-record-table .placement-DISQ {
+  background: #484848;
+  color: #fff;
+  font-weight: 700;
+}
+
 .track-record-table .placement-EMPTY {
   background: #d9d9d9;
   color: #000;
@@ -685,6 +692,7 @@
 .placement-BTM2 { background-color: #f88379; color: black; }
 .placement-ELIM { background-color: #a11f24; color: white; font-weight: bold; }
 .placement-DEPT { background-color: #e2a9f1; color: black; font-weight: bold; }
+.placement-DISQ { background-color: #484848; color: white; font-weight: bold; }
 .placement-WINNER { background-color: #ffd700; color: black; font-weight: bold; }
 .placement-RUNNER-UP { background-color: #c0c0c0; color: black; font-weight: bold; }
 .placement-GUEST { background-color: #eaecf0; color: black; }
@@ -702,8 +710,8 @@
       max-height: 88vh;
     }
     .debug-header {
-      background: linear-gradient(135deg, #1a1a2e, #16213e);
-      color: #e2a9f1;
+      background: linear-gradient(135deg, #0d2b1a, #0a2015);
+      color: #6ee89a;
       padding: 16px 20px;
       border-radius: 20px 20px 0 0;
       display: flex;
@@ -713,16 +721,16 @@
     .debug-header h2 { margin: 0; font-size: 18px; letter-spacing: 0.05em; }
     .debug-header .debug-badge {
       font-size: 10px;
-      background: #e2a9f1;
-      color: #1a1a2e;
+      background: #6ee89a;
+      color: #0a2015;
       padding: 3px 8px;
       border-radius: 999px;
       font-weight: 800;
       letter-spacing: 0.08em;
     }
     .debug-body {
-      background: #0f0f1a;
-      color: #d0d0e8;
+      background: #0c1f13;
+      color: #b8d8c0;
       padding: 18px 20px;
       border-radius: 0 0 20px 20px;
       overflow-y: auto;
@@ -733,10 +741,10 @@
       font-weight: 800;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: #e2a9f1;
+      color: #6ee89a;
       margin: 18px 0 10px;
       padding-bottom: 6px;
-      border-bottom: 1px solid #2a2a4a;
+      border-bottom: 1px solid #1e3d28;
     }
     .debug-section-title:first-child { margin-top: 0; }
     .debug-stat-grid {
@@ -746,23 +754,23 @@
       margin-bottom: 4px;
     }
     .debug-stat {
-      background: #1a1a2e;
-      border: 1px solid #2a2a4a;
+      background: #112b1a;
+      border: 1px solid #1e3d28;
       border-radius: 10px;
       padding: 8px 10px;
       font-size: 12px;
     }
-    .debug-stat .label { color: #7070a0; font-size: 10px; margin-bottom: 2px; }
-    .debug-stat .value { color: #e2a9f1; font-weight: 700; font-size: 14px; }
+    .debug-stat .label { color: #3d6b4a; font-size: 10px; margin-bottom: 2px; }
+    .debug-stat .value { color: #6ee89a; font-weight: 700; font-size: 14px; }
     .debug-btn {
       display: block;
       width: 100%;
       margin-top: 8px;
       padding: 10px 14px;
       border-radius: 12px;
-      border: 1px solid #3a3a5a;
-      background: #1a1a2e;
-      color: #d0d0e8;
+      border: 1px solid #254d32;
+      background: #112b1a;
+      color: #b8d8c0;
       font-size: 13px;
       font-weight: 700;
       cursor: pointer;
@@ -770,14 +778,14 @@
       transition: all 0.15s;
       box-shadow: none;
     }
-    .debug-btn:hover { background: #2a2a4e; border-color: #e2a9f1; color: #e2a9f1; transform: none; }
+    .debug-btn:hover { background: #1a3d25; border-color: #6ee89a; color: #6ee89a; transform: none; }
     .debug-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-    .debug-btn.accent { background: #2a1a3e; border-color: #e2a9f1; color: #e2a9f1; }
+    .debug-btn.accent { background: #0d2b1a; border-color: #6ee89a; color: #6ee89a; }
     .debug-btn.danger-btn { border-color: #ff6b6b; color: #ff9999; }
     .debug-btn.danger-btn:hover { background: #2e1a1a; border-color: #ff6b6b; color: #ff6b6b; }
     .debug-note {
       font-size: 11px;
-      color: #5555a0;
+      color: #2d5238;
       margin: 6px 0 0;
       line-height: 1.5;
     }
@@ -785,9 +793,9 @@
       width: 100%;
       padding: 12px 14px;
       border-radius: 12px;
-      border: 1px solid #3a3a5a;
-      background: #1a1a2e;
-      color: #e2a9f1;
+      border: 1px solid #254d32;
+      background: #112b1a;
+      color: #6ee89a;
       font-size: 16px;
       font-family: monospace;
       letter-spacing: 0.15em;
@@ -795,7 +803,7 @@
       box-sizing: border-box;
       margin-top: 12px;
     }
-    #debugCodeModal input[type="password"]::placeholder { color: #4040a0; letter-spacing: 0.05em; }
+    #debugCodeModal input[type="password"]::placeholder { color: #2d5238; letter-spacing: 0.05em; }
     #debugCodeError {
       color: #ff6b6b;
       font-size: 12px;
@@ -812,25 +820,25 @@
           <img src="banner.png" alt="Drag Race Simulator Banner" class="main-logo" />
         </div>
       <h1 class="title">Greenroom Drag Race Simulator</h1>
-      <p class="subtitle" id="secretTrigger">Dev v2.1 - Last Updated 30/4/26</p>
+      <p class="subtitle" id="secretTrigger">Dev v2.2.0 - Last Updated 30/4/26</p>
 
     <!-- Debug Code Entry Modal -->
     <div id="debugCodeModal" class="modal hidden">
-      <div class="modal-content" style="background:#0f0f1a; border:1px solid #3a3a5a; border-radius:20px; padding:24px;">
-        <div style="color:#e2a9f1; font-size:18px; font-weight:900; letter-spacing:0.05em; margin-bottom:4px;">🔒 Restricted Access</div>
-        <div style="color:#5555a0; font-size:12px; margin-bottom:4px;">Enter the developer access code to continue.</div>
+      <div class="modal-content" style="background:#0c1f13; border:1px solid #254d32; border-radius:20px; padding:24px;">
+        <div style="color:#6ee89a; font-size:18px; font-weight:900; letter-spacing:0.05em; margin-bottom:4px;">🔒 Restricted Access</div>
+        <div style="color:#2d5238; font-size:12px; margin-bottom:4px;">Enter the developer access code to continue.</div>
         <input type="password" id="debugCodeInput" placeholder="enter code..." autocomplete="off" />
         <div id="debugCodeError"></div>
         <div style="display:flex; gap:10px; margin-top:14px;">
-          <button id="debugCodeSubmit" style="flex:1; padding:10px; border-radius:12px; border:1px solid #e2a9f1; background:#2a1a3e; color:#e2a9f1; font-weight:800; cursor:pointer; font-size:14px; box-shadow:none;">Unlock</button>
-          <button id="debugCodeCancel" style="flex:1; padding:10px; border-radius:12px; border:1px solid #3a3a5a; background:#1a1a2e; color:#7070a0; font-weight:700; cursor:pointer; font-size:14px; box-shadow:none;">Cancel</button>
+          <button id="debugCodeSubmit" style="flex:1; padding:10px; border-radius:12px; border:1px solid #6ee89a; background:#0d2b1a; color:#6ee89a; font-weight:800; cursor:pointer; font-size:14px; box-shadow:none;">Unlock</button>
+          <button id="debugCodeCancel" style="flex:1; padding:10px; border-radius:12px; border:1px solid #254d32; background:#112b1a; color:#3d6b4a; font-weight:700; cursor:pointer; font-size:14px; box-shadow:none;">Cancel</button>
         </div>
       </div>
     </div>
 
     <!-- Debug Panel Modal -->
     <div id="debugPanelModal" class="modal hidden">
-      <div class="modal-content panel" style="background:#0f0f1a; border:1px solid #3a3a5a;">
+      <div class="modal-content panel" style="background:#0c1f13; border:1px solid #254d32;">
         <div class="debug-header">
           <h2>🛠 Developer Debug Panel</h2>
           <span class="debug-badge">INTERNAL</span>
@@ -853,10 +861,15 @@
           <button class="debug-btn" id="dbg-forceDEPT-next" style="margin-top:6px;">💜 Force DEPT Next Episode</button>
           <button class="debug-btn" id="dbg-clearForce" style="margin-top:6px;">✕ Clear Forced Flags</button>
 
-          <div class="debug-section-title">Future Placements (Placeholder)</div>
-          <p class="debug-note">Reserved slots for upcoming special placement types. Not yet implemented.</p>
-          <button class="debug-btn" disabled>🔜 Force [Future Placement A]</button>
-          <button class="debug-btn" disabled style="margin-top:6px;">🔜 Force [Future Placement B]</button>
+          <div class="debug-section-title">DISQ — Disqualification</div>
+          <p class="debug-note">Forces a disqualification onto the current or next eligible episode. Regular Season elimination episodes only — not premiere, LaLaPaRuza, Non-Elim, or Finale.</p>
+          <div class="debug-stat" style="margin-bottom:8px;">
+            <div class="label">DISQ Status</div>
+            <div class="value" id="dbg-disq-status">—</div>
+          </div>
+          <button class="debug-btn accent" id="dbg-forceDISQ">⬛ Force DISQ This Episode</button>
+          <button class="debug-btn" id="dbg-forceDISQ-next" style="margin-top:6px;">⬛ Force DISQ Next Episode</button>
+          <button class="debug-btn" id="dbg-toggleDisq" style="margin-top:6px;">🔁 Toggle DISQ On/Off</button>
 
           <div class="debug-section-title">Episode Tools</div>
           <button class="debug-btn" id="dbg-rerollEp">🎲 Re-roll Current Episode</button>
@@ -1150,6 +1163,17 @@
             </label>
           </div>
 
+          <div class="toggle-row">
+            <div class="toggle-label-group">
+              <span class="toggle-label-title">Disqualification (DISQ)</span>
+              <span class="toggle-label-desc">Very rarely (0.5% chance per elimination episode), a queen may be disqualified for breaking competition rules and asked to leave immediately. The bottom 2 still lip sync normally. Regular Season only — not available on premieres, LaLaPaRuza, or Non-Elim episodes.</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="disqToggle" checked />
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+
         </div>
       </div>
     </div>
@@ -1422,6 +1446,7 @@
       hasMidSeasonNonElim: false,
       nonElimEnabled: true,
       deptEnabled: false,
+      disqEnabled: true,
       // TOURNAMENT TRACKERS:
       tournamentPoints: {}, 
       wildcardQueen: null,
@@ -1478,6 +1503,9 @@
     });
     document.getElementById("deptToggle").addEventListener("change", (e) => {
       state.deptEnabled = e.target.checked;
+    });
+    document.getElementById("disqToggle").addEventListener("change", (e) => {
+      state.disqEnabled = e.target.checked;
     });
     el.suggestBtn.addEventListener("click", () => {
       window.open("https://forms.gle/bprZzRLGFyfe9yWs6", "_blank");
@@ -1585,6 +1613,7 @@
         if (p === "T_WIN_ELIM")  return "bg-t_win_elim";
         if (p === "RTRN")        return "bg-return";
         if (p === "DEPT")        return "bg-dept";
+        if (p === "DISQ")        return "bg-disq";
         return `bg-${p.toLowerCase()}`;
     }
 
@@ -1599,6 +1628,7 @@
         if (p === "T_WIN2_ELIM") return `<span class="compound-placement">WIN<br>+ ELIM</span>`;
         if (p === "T_WIN_ELIM")  return `<span class="compound-placement">WIN<br>+ ELIM</span>`;
         if (p === "DEPT")        return "DEPT";
+        if (p === "DISQ")        return "DISQ";
         return p;
     }
 
@@ -1658,6 +1688,7 @@
       state.premiereFormat = el.premiereFormatSelect.value;
       state.lalaPaRuzaEnabled = document.getElementById("lalaPaRuzaToggle").checked;
       state.deptEnabled = document.getElementById("deptToggle").checked;
+      state.disqEnabled = document.getElementById("disqToggle").checked;
       
       el.customQueenModal.classList.add("hidden");
       state.queens = state.queens.map((q, i) => ({
@@ -2150,6 +2181,21 @@ if (state.seasonFormat === "tournament-of-all-stars") {
                   if (deptCandidates.length > 0) {
                       ed.isDept = true;
                       ed.deptQueen = pick(deptCandidates);
+                  }
+              }
+          }
+      }
+
+      // DISQ Check — Regular season only, not premiere, not special episode
+      if (state.disqEnabled && state.seasonFormat === "regular" && state.episodeNumber > 1) {
+          const ed = state.episodeData;
+          if (ed && !ed.isLaLaPaRuza && !ed.isMidSeasonNonElim && !ed.isDept) {
+              if (Math.random() < 0.005) {
+                  const btm2Ids = new Set((ed.placements.bottomTwo || []).map(q => q.id));
+                  const disqCandidates = activeQueens().filter(q => !btm2Ids.has(q.id));
+                  if (disqCandidates.length > 0) {
+                      ed.isDisq = true;
+                      ed.disqQueen = pick(disqCandidates);
                   }
               }
           }
@@ -2955,13 +3001,13 @@ if (state.seasonFormat === "tournament-of-all-stars") {
             
             let lipSyncText = "";
             if (state.seasonFormat === "all-stars-legacy") {
-                lipSyncText = "Two top queens stand before me. Prior to tonight, you were asked to prepare a lip sync performance... for your legacy! Good luck, and don't f*ck it up.";
+                lipSyncText = "For you to lip-sync... for your legacy! Good luck, and don't f*ck it up.";
             } else if ((state.episodeNumber === 1 && state.premiereFormat === "top2") || data.isMidSeasonNonElim) {
                 lipSyncText = "For you to lip-sync... for the win! Good luck, and don't f*ck it up.";
             } else {
                 lipSyncText = "For you to lip-sync... for your lives! Good luck, and don't f*ck it up.";
             }
-            
+
             content = `
               <div class="section-card">
                 <div class="label-row"><span class="pill">The time has come...</span></div>
@@ -3113,6 +3159,19 @@ if (state.seasonFormat === "tournament-of-all-stars") {
                   dq.elimOrder = state.episodeNumber;
                   dq.history[state.episodeNumber - 1] = "DEPT";
                   data.elimination = { isDept: true, deptQueen: dq };
+              // DISQ: disqualified queen departs — no one from BTM2 goes home
+              } else if (data.isDisq) {
+                  const dq = data.disqQueen;
+                  dq.record.ELIM = (dq.record.ELIM || 0) + 1;
+                  dq.eliminated = true;
+                  dq.elimOrder = state.episodeNumber;
+                  dq.history[state.episodeNumber - 1] = "DISQ";
+                  // Both bottom 2 queens are safe — record BTM2 for both
+                  const w = data.lipSync.winner.queen;
+                  const l = data.lipSync.loser.queen;
+                  w.record.BTM2 += 1; w.history[state.episodeNumber - 1] = "BTM2";
+                  l.record.BTM2 += 1; l.history[state.episodeNumber - 1] = "BTM2";
+                  data.elimination = { isDisq: true, disqQueen: dq, winner: w, loser: l };
               } else {
               let w = data.lipSync.winner.queen;
               let l = data.lipSync.loser.queen;
@@ -3194,6 +3253,25 @@ if (state.seasonFormat === "tournament-of-all-stars") {
                   </div>
                   <div class="group-row" style="border:none;">
                     <p class="muted">Due to an injury sustained during this competition, you have been advised to withdraw and seek proper medical care. We are deeply grateful for everything you have brought to this competition, and we wish you a full and speedy recovery.</p>
+                    <p class="muted" style="margin-top: 10px; font-style: italic; color: var(--danger);">As a result, no queen from the bottom 2 will be going home tonight.</p>
+                  </div>
+                `;
+            } else if (e.isDisq) {
+                contentInner = `
+                  <div class="group-row">
+                    <div class="placement-card bg-shantay">${escapeHtml(e.winner.name)}</div>
+                    <p class="muted">Condragulations — you have won this lip sync.</p>
+                  </div>
+                  <div class="group-row">
+                    <div class="placement-card bg-btm">${escapeHtml(e.loser.name)}</div>
+                    <p class="muted">However, before anyone goes home tonight, I need to address something.</p>
+                  </div>
+                  <div class="group-row" style="border: 1px solid #484848; border-radius: 12px; padding: 14px; background: #111; margin-top: 4px;">
+                    <p class="muted" style="color: #bbb;">${escapeHtml(e.disqQueen.name)}, please step forward.</p>
+                    <div class="placement-card bg-disq" style="margin: 10px 0;">${escapeHtml(e.disqQueen.name)}</div>
+                    <p class="muted" style="color: #bbb;">It has come to our attention that you have broken the rules of this competition. You are hereby disqualified and must leave immediately.</p>
+                  </div>
+                  <div class="group-row" style="border:none;">
                     <p class="muted" style="margin-top: 10px; font-style: italic; color: var(--danger);">As a result, no queen from the bottom 2 will be going home tonight.</p>
                   </div>
                 `;
@@ -4524,11 +4602,14 @@ window.resolveTournamentTie = function(queenId) {
         let special = "none";
         if (ed) {
           if (ed.isDept) special = "DEPT";
+          else if (ed.isDisq) special = "DISQ";
           else if (ed.isLaLaPaRuza) special = "LaLaPaRuza";
           else if (ed.isMidSeasonNonElim) special = "NonElim";
           else if (ed.isGirlGroup) special = "GirlGroup";
         }
         document.getElementById("dbg-special").textContent = special;
+        const disqEl = document.getElementById("dbg-disq-status");
+        if (disqEl) disqEl.textContent = state.disqEnabled ? "ENABLED (0.5% chance)" : "DISABLED";
       }
 
       // ── Force DEPT on CURRENT episode ──
@@ -4572,12 +4653,65 @@ window.resolveTournamentTie = function(queenId) {
       // ── Clear forced flags ──
       document.getElementById("dbg-clearForce").addEventListener("click", () => {
         state._forceDeptNextEp = false;
+        state._forceDisqNextEp = false;
         if (state.episodeData) {
           state.episodeData.isDept = false;
           state.episodeData.deptQueen = null;
+          state.episodeData.isDisq = false;
+          state.episodeData.disqQueen = null;
         }
         refreshDebugState();
         alert("Forced flags cleared.");
+      });
+
+      // ── Toggle DISQ on/off ──
+      document.getElementById("dbg-toggleDisq").addEventListener("click", () => {
+        state.disqEnabled = !state.disqEnabled;
+        const toggle = document.getElementById("disqToggle");
+        if (toggle) toggle.checked = state.disqEnabled;
+        refreshDebugState();
+        alert(`DISQ is now ${state.disqEnabled ? "ENABLED" : "DISABLED"}.`);
+      });
+
+      // ── Force DISQ on CURRENT episode ──
+      document.getElementById("dbg-forceDISQ").addEventListener("click", () => {
+        if (state.mode !== "game" || !state.episodeData) {
+          return alert("No active game episode to force. Start a Regular Season first.");
+        }
+        if (state.seasonFormat !== "regular") {
+          return alert("DISQ is only available in Regular Season format.");
+        }
+        const ed = state.episodeData;
+        if (ed.isLaLaPaRuza || ed.isMidSeasonNonElim || ed.isTournamentBracket || ed.isTournamentMerge || ed.isTournamentSemi) {
+          return alert("Cannot force DISQ on this episode type.");
+        }
+        if (state.episodeNumber === 1) {
+          return alert("Cannot force DISQ on the premiere.");
+        }
+        if (ed.isDept) {
+          return alert("This episode already has a DEPT event. Clear forced flags first.");
+        }
+        // Reset any already-processed elimination so it re-runs
+        ed.elimination = null;
+        ed.lipSync = null;
+        ed.isDisq = true;
+        const btm2Ids = new Set((ed.placements.bottomTwo || []).map(q => q.id));
+        const candidates = activeQueens().filter(q => !btm2Ids.has(q.id));
+        if (!candidates.length) return alert("No eligible queens to assign DISQ to.");
+        ed.disqQueen = pick(candidates);
+        // Rewind phase to before the lip sync so it plays through correctly
+        state.phase = Math.min(state.phase, 4);
+        panelModal.classList.add("hidden");
+        refreshDebugState();
+        renderEpisode();
+        alert(`✅ DISQ forced on: ${ed.disqQueen.name}\nPhase rewound to 4 — click Next to proceed through the lip sync.`);
+      });
+
+      // ── Force DISQ on NEXT episode ──
+      document.getElementById("dbg-forceDISQ-next").addEventListener("click", () => {
+        state._forceDisqNextEp = true;
+        refreshDebugState();
+        alert("✅ DISQ will be forced on the next eligible episode.");
       });
 
       // ── Re-roll current episode ──
@@ -4633,6 +4767,24 @@ window.resolveTournamentTie = function(queenId) {
                 ed.isDept = true;
                 ed.deptQueen = pick(candidates);
                 state._forceDeptNextEp = false;
+                renderEpisode();
+              }
+            }
+          }
+          // Apply forced DISQ on next episode
+          if (state._forceDisqNextEp && state.mode === "game" && state.episodeData) {
+            const ed = state.episodeData;
+            const eligible = !ed.isLaLaPaRuza && !ed.isMidSeasonNonElim
+                          && !ed.isTournamentBracket && !ed.isTournamentMerge && !ed.isTournamentSemi
+                          && !ed.isDept
+                          && state.seasonFormat === "regular" && state.episodeNumber > 1;
+            if (eligible && !ed.isDisq) {
+              const btm2Ids = new Set((ed.placements.bottomTwo || []).map(q => q.id));
+              const candidates = activeQueens().filter(q => !btm2Ids.has(q.id));
+              if (candidates.length > 0) {
+                ed.isDisq = true;
+                ed.disqQueen = pick(candidates);
+                state._forceDisqNextEp = false;
                 renderEpisode();
               }
             }
