@@ -220,6 +220,7 @@
     }
     .bg-dept { background: #e2a9f1 !important; color: #000000 !important; border: none; font-weight: bold; }
     .bg-disq { background: #484848 !important; color: #ffffff !important; border: none; font-weight: bold; }
+    .bg-quit { background: #ff66a2 !important; color: #000000 !important; border: none; font-weight: bold; }
     
     /* Tournament of All Stars — expanded placements (use standard base colors) */
     .bg-t_win    { background: #00bfff !important; color: #000000 !important; border: none; font-weight: bold; } /* Top 2 standalone (no outcome yet) */
@@ -680,6 +681,12 @@
   font-weight: 700;
 }
 
+.track-record-table .placement-QUIT {
+  background: #ff66a2;
+  color: #000;
+  font-weight: 700;
+}
+
 .track-record-table .placement-EMPTY {
   background: #d9d9d9;
   color: #000;
@@ -693,6 +700,7 @@
 .placement-ELIM { background-color: #a11f24; color: white; font-weight: bold; }
 .placement-DEPT { background-color: #e2a9f1; color: black; font-weight: bold; }
 .placement-DISQ { background-color: #484848; color: white; font-weight: bold; }
+.placement-QUIT { background-color: #ff66a2; color: black; font-weight: bold; }
 .placement-WINNER { background-color: #ffd700; color: black; font-weight: bold; }
 .placement-RUNNER-UP { background-color: #c0c0c0; color: black; font-weight: bold; }
 .placement-GUEST { background-color: #eaecf0; color: black; }
@@ -820,7 +828,7 @@
           <img src="banner.png" alt="Drag Race Simulator Banner" class="main-logo" />
         </div>
       <h1 class="title">Greenroom Drag Race Simulator</h1>
-      <p class="subtitle" id="secretTrigger">Dev v2.1 - Last Updated 30/4/26</p>
+      <p class="subtitle" id="secretTrigger">Dev v2.2 - Last Updated 30/4/26</p>
 
     <!-- Debug Code Entry Modal -->
     <div id="debugCodeModal" class="modal hidden">
@@ -870,6 +878,16 @@
           <button class="debug-btn accent" id="dbg-forceDISQ">⬛ Force DISQ This Episode</button>
           <button class="debug-btn" id="dbg-forceDISQ-next" style="margin-top:6px;">⬛ Force DISQ Next Episode</button>
           <button class="debug-btn" id="dbg-toggleDisq" style="margin-top:6px;">🔁 Toggle DISQ On/Off</button>
+
+          <div class="debug-section-title">QUIT — Queen Quits</div>
+          <p class="debug-note">Forces a queen to quit on the current or next eligible episode. Converts episode to Top 2 lip sync for the win. Regular Season elimination episodes only — not premiere, LaLaPaRuza, Non-Elim, or Finale. Only once per season.</p>
+          <div class="debug-stat" style="margin-bottom:8px;">
+            <div class="label">QUIT Status</div>
+            <div class="value" id="dbg-quit-status">—</div>
+          </div>
+          <button class="debug-btn" style="border-color:#ff66a2; color:#ffaad0;" id="dbg-forceQUIT">💗 Force QUIT This Episode</button>
+          <button class="debug-btn" id="dbg-forceQUIT-next" style="margin-top:6px;">💗 Force QUIT Next Episode</button>
+          <button class="debug-btn" id="dbg-toggleQuit" style="margin-top:6px;">🔁 Toggle QUIT On/Off</button>
 
           <div class="debug-section-title">Episode Tools</div>
           <button class="debug-btn" id="dbg-rerollEp">🎲 Re-roll Current Episode</button>
@@ -966,6 +984,15 @@
         </div>
         <div class="panel-body">
           <div class="patch-notes-content">
+            <h3>v2.2 - Update</h3>
+            <ul>
+              <li>Added Queen Quits (QUIT) twist — a queen can quit mid-critiques (2% chance, once per season, Regular Season only).</li>
+              <li>When a queen quits, the episode converts to a Top 2 lip sync for the win format. Bottom queens receive LOW instead of BTM2.</li>
+              <li>QUIT placement appears in the track record in pink (#ff66a2).</li>
+              <li>Added QUIT toggle to Extra Options, and Force QUIT controls to the Debug Panel.</li>
+              <li>QUIT is mutually exclusive with DEPT and DISQ — only one special twist can occur per season.</li>
+            </ul>
+
             <h3>v2.0.1 - Mini Update</h3>
             <ul>
               <li>Updated all cast photos to close ups.</li>
@@ -1169,7 +1196,18 @@
               <span class="toggle-label-desc">Very rarely (0.5% chance per elimination episode), a queen may be disqualified for breaking competition rules and asked to leave immediately. The bottom 2 still lip sync normally. Regular Season only — not available on premieres, LaLaPaRuza, or Non-Elim episodes.</span>
             </div>
             <label class="toggle-switch">
-              <input type="checkbox" id="disqToggle" checked />
+              <input type="checkbox" id="disqToggle" />
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+
+          <div class="toggle-row">
+            <div class="toggle-label-group">
+              <span class="toggle-label-title">Queen Quits (QUIT)</span>
+              <span class="toggle-label-desc">Rarely (2% chance per elimination episode), a queen announces during critiques that she wants to quit. She sashays away immediately. The episode then converts to a Top 2 format — the top two queens lip sync for the win, and all bottom queens receive a LOW placement instead. Only once per season. Regular Season only.</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="quitToggle" />
               <span class="toggle-track"></span>
             </label>
           </div>
@@ -1446,7 +1484,11 @@
       hasMidSeasonNonElim: false,
       nonElimEnabled: true,
       deptEnabled: false,
-      disqEnabled: true,
+      disqEnabled: false,
+      quitEnabled: false,
+      hasQuit: false,
+      hasDept: false,
+      hasDisq: false,
       // TOURNAMENT TRACKERS:
       tournamentPoints: {}, 
       wildcardQueen: null,
@@ -1506,6 +1548,9 @@
     });
     document.getElementById("disqToggle").addEventListener("change", (e) => {
       state.disqEnabled = e.target.checked;
+    });
+    document.getElementById("quitToggle").addEventListener("change", (e) => {
+      state.quitEnabled = e.target.checked;
     });
     el.suggestBtn.addEventListener("click", () => {
       window.open("https://forms.gle/bprZzRLGFyfe9yWs6", "_blank");
@@ -1614,6 +1659,7 @@
         if (p === "RTRN")        return "bg-return";
         if (p === "DEPT")        return "bg-dept";
         if (p === "DISQ")        return "bg-disq";
+        if (p === "QUIT")        return "bg-quit";
         return `bg-${p.toLowerCase()}`;
     }
 
@@ -1629,6 +1675,7 @@
         if (p === "T_WIN_ELIM")  return `<span class="compound-placement">WIN<br>+ ELIM</span>`;
         if (p === "DEPT")        return "DEPT";
         if (p === "DISQ")        return "DISQ";
+        if (p === "QUIT")        return "QUIT";
         return p;
     }
 
@@ -1689,6 +1736,8 @@
       state.lalaPaRuzaEnabled = document.getElementById("lalaPaRuzaToggle").checked;
       state.deptEnabled = document.getElementById("deptToggle").checked;
       state.disqEnabled = document.getElementById("disqToggle").checked;
+      state.quitEnabled = document.getElementById("quitToggle").checked;
+      state.hasQuit = false; state.hasDept = false; state.hasDisq = false;
       
       el.customQueenModal.classList.add("hidden");
       state.queens = state.queens.map((q, i) => ({
@@ -1697,6 +1746,7 @@
         history: [], eliminated: false, elimOrder: 999
       }));
       state.episodeNumber = 1; state.phase = 1; state.mode = "game"; state.usedMinis = []; state.usedMaxis = []; state.hasMidSeasonNonElim = false;
+      state.hasQuit = false; state.hasDept = false; state.hasDisq = false;
       state.tournamentPoints = {};
       state.queens.forEach(q => state.tournamentPoints[q.id] = 0);
       prepareEpisode(); renderAll();
@@ -2181,6 +2231,7 @@ if (state.seasonFormat === "tournament-of-all-stars") {
                   if (deptCandidates.length > 0) {
                       ed.isDept = true;
                       ed.deptQueen = pick(deptCandidates);
+                      state.hasDept = true;
                   }
               }
           }
@@ -2196,6 +2247,24 @@ if (state.seasonFormat === "tournament-of-all-stars") {
                   if (disqCandidates.length > 0) {
                       ed.isDisq = true;
                       ed.disqQueen = pick(disqCandidates);
+                      state.hasDisq = true;
+                  }
+              }
+          }
+      }
+
+      // QUIT Check — Regular season only, not premiere, not special episode, only once per season
+      if (state.quitEnabled && state.seasonFormat === "regular" && state.episodeNumber > 1 && !state.hasQuit && !state.hasDept && !state.hasDisq) {
+          const ed = state.episodeData;
+          if (ed && !ed.isLaLaPaRuza && !ed.isMidSeasonNonElim && !ed.isDept && !ed.isDisq) {
+              if (Math.random() < 0.02) {
+                  const btm2Ids = new Set((ed.placements.bottomTwo || []).map(q => q.id));
+                  const winnerIds = new Set((ed.placements.winners || []).map(q => q.id));
+                  const quitCandidates = activeQueens().filter(q => !btm2Ids.has(q.id) && !winnerIds.has(q.id));
+                  if (quitCandidates.length > 0) {
+                      ed.isQuit = true;
+                      ed.quitQueen = pick(quitCandidates);
+                      state.hasQuit = true;
                   }
               }
           }
@@ -2429,6 +2498,9 @@ if (state.seasonFormat === "tournament-of-all-stars") {
       if (isAssassin) {
           totalScreens = (data.lsaData && data.lsaData.tieBreakerNeeded) ? 9 : 8;
       }
+      if (data.isQuit && !isGG && !data.isLaLaPaRuza && !isAssassin) {
+          totalScreens = 8;
+      }
       el.screenCounterText.textContent = "";
       
       // Rig Button Toggle Logic
@@ -2439,7 +2511,8 @@ if (state.seasonFormat === "tournament-of-all-stars") {
           (data.isLaLaPaRuza && state.phase !== 6) ||
           (isAssassin && state.phase !== 3 && state.phase !== 6) ||
           (data.isTournamentMerge && state.phase !== 4 && state.phase !== 6) || // Accounts for the Merge phase shift
-          (!isGG && !data.isLaLaPaRuza && !isAssassin && !data.isTournamentMerge && state.phase !== 3 && state.phase !== 5)
+          (data.isQuit && !isGG && !data.isLaLaPaRuza && !isAssassin && !data.isTournamentMerge && state.phase !== 3 && state.phase !== 6) ||
+          (!data.isQuit && !isGG && !data.isLaLaPaRuza && !isAssassin && !data.isTournamentMerge && state.phase !== 3 && state.phase !== 5)
       );
       
       // Phase Translator mapping specifically to handle Girl Group shifts and Assassin shifts
@@ -2470,6 +2543,11 @@ if (state.seasonFormat === "tournament-of-all-stars") {
           }
           else if (state.phase === 9) phaseTag = 7;
           // Map to Recap
+      }
+      // QUIT shift: insert quit_announce at phase 4, shift later phases down by 1
+      if (data.isQuit && !isGG && !data.isLaLaPaRuza && !isAssassin && !data.isTournamentMerge) {
+          if (state.phase === 4) phaseTag = "quit_announce";
+          else if (state.phase > 4) phaseTag = state.phase - 1;
       }
 
       let content = "";
@@ -2817,6 +2895,18 @@ if (state.seasonFormat === "tournament-of-all-stars") {
               } else if (data.isMidSeasonNonElim) {
                   data.placements.highQueens.forEach(q => { q.record.HIGH += 1; q.history[epIndex] = "HIGH"; });
                   data.placements.pureSafe.forEach(q => { q.record.SAFE += 1; q.history[epIndex] = "SAFE"; });
+              } else if (data.isQuit) {
+                  // QUIT episode: top2 get TOP2 records for now (updated when lip sync resolves),
+                  // highs and safes get their normal records, btm2 get LOW (not BTM2)
+                  // The quit queen already has history set to "QUIT" from quit_announce — skip her here.
+                  const qt2Ids = new Set((data.quitTop2 || []).map(q => q.id));
+                  const quitId = data.quitQueen ? data.quitQueen.id : null;
+                  data.placements.winners.forEach(q => { if (!qt2Ids.has(q.id) && q.id !== quitId) { q.record.HIGH += 1; q.history[epIndex] = "HIGH"; } });
+                  data.placements.highQueens.forEach(q => { if (!qt2Ids.has(q.id) && q.id !== quitId) { q.record.HIGH += 1; q.history[epIndex] = "HIGH"; } });
+                  data.placements.pureSafe.forEach(q => { if (q.id !== quitId) { q.record.SAFE += 1; q.history[epIndex] = "SAFE"; } });
+                  if (data.placements.savedLow && data.placements.savedLow.id !== quitId) { data.placements.savedLow.record.LOW += 1; data.placements.savedLow.history[epIndex] = "LOW"; }
+                  // Bottom 2 get LOW placement (not BTM2) on a QUIT episode
+                  if (data.placements.bottomTwo) { data.placements.bottomTwo.forEach(q => { if (q.id !== quitId) { q.record.LOW += 1; q.history[epIndex] = "LOW"; } }); }
               } else {
                   data.placements.winners.forEach(q => { q.record.WIN += 1; q.history[epIndex] = "WIN"; });
                   data.placements.highQueens.forEach(q => { q.record.HIGH += 1; q.history[epIndex] = "HIGH"; });
@@ -2935,6 +3025,40 @@ if (state.seasonFormat === "tournament-of-all-stars") {
                     </div>
                   </div>
                 `;
+            } else if (data.isQuit && data.quitTop2) {
+                // QUIT episode: top 2 lip sync for the win, btm2 gets LOW
+                const qt2 = data.quitTop2;
+                const qBtm = p.bottomTwo || [];
+                const quitId = data.quitQueen ? data.quitQueen.id : null;
+                const qHighOthers = [...p.winners, ...p.highQueens].filter(q => !qt2.some(t => t.id === q.id) && q.id !== quitId);
+                const qSavedLow = (p.savedLow && p.savedLow.id !== quitId) ? p.savedLow : null;
+                content = `
+                  <div class="section-card">
+                    <div class="label-row"><span class="pill" style="background:#ff66a2; color:#000; border-color:#ff66a2;">Reshuffled Placements</span></div>
+                    <p class="muted" style="margin-bottom:16px;">Due to tonight's shock withdrawal, the episode format has changed. The Top 2 will lip sync for the win!</p>
+                    <div class="flex-col-center">
+                      <div class="group-row">
+                        <div class="flex-center">${qt2.map(q => `<div class="placement-card bg-top2">${escapeHtml(q.name)}</div>`).join("")}</div>
+                        <p class="muted">You two will lip sync for the win tonight!</p>
+                      </div>
+                      ${qHighOthers.length ? `
+                      <div class="group-row">
+                        <div class="flex-center">${qHighOthers.map(q => `<div class="placement-card bg-high">${escapeHtml(q.name)}</div>`).join("")}</div>
+                        <p class="muted">You are safe.</p>
+                      </div>` : ""}
+                      ${qSavedLow ? `
+                      <div class="group-row">
+                        <div class="flex-center"><div class="placement-card bg-low">${escapeHtml(qSavedLow.name)}</div></div>
+                        <p class="muted">You are safe, but step it up.</p>
+                      </div>` : ""}
+                      ${qBtm.length ? `
+                      <div class="group-row" style="border:none;">
+                        <div class="flex-center">${qBtm.map(q => `<div class="placement-card bg-low">${escapeHtml(q.name)}</div>`).join("")}</div>
+                        <p class="muted">Due to the circumstances tonight, you are not up for elimination — but you are low this week.</p>
+                      </div>` : ""}
+                    </div>
+                  </div>
+                `;
             } else {
                 content = `
                   <div class="section-card">
@@ -2963,6 +3087,30 @@ if (state.seasonFormat === "tournament-of-all-stars") {
                   </div>
                 `;
             }
+          } else if (phaseTag === "quit_announce") {
+            const qq = data.quitQueen;
+            if (!data.quitApplied) {
+                qq.record.ELIM = (qq.record.ELIM || 0) + 1;
+                qq.eliminated = true;
+                qq.elimOrder = state.episodeNumber;
+                qq.history[state.episodeNumber - 1] = "QUIT";
+                data.quitTop2 = [data.scores[0].queen, data.scores[1].queen];
+                data.quitApplied = true;
+            }
+            content = `
+              <div class="section-card flex-col-center">
+                <div class="label-row"><span class="pill" style="background:#ff66a2; color:#000; border-color:#ff66a2;">⚠ Shock Announcement</span></div>
+                <p class="big-message" style="color:#ff66a2; margin-top:16px;">A Queen Wants to Quit!</p>
+                <p class="muted" style="margin-bottom:16px;">During critiques, <strong>${escapeHtml(qq.name)}</strong> has made a shocking announcement...</p>
+                <div class="flex-col-center" style="gap:12px; margin-top:8px;">
+                  <div class="placement-card bg-quit" style="font-size:18px; padding:16px 32px;">${escapeHtml(qq.name)}</div>
+                  <p class="muted" style="font-style:italic;">"I need to withdraw from the competition. I'm so sorry."</p>
+                  <p class="muted" style="font-weight:800; color:#ff66a2;">Sashay away.</p>
+                </div>
+                <hr style="width:100%; border:0; border-top:1px solid var(--border); margin:20px 0;">
+                <p class="muted" style="font-size:13px; color:var(--muted);">This shock departure reshapes tonight's episode — the <strong>Top 2</strong> will now lip sync for the win!</p>
+              </div>
+            `;
           } else if (phaseTag === "lsa_ruveal") {
               content = `
                 <div class="section-card flex-col-center">
@@ -2980,6 +3128,9 @@ if (state.seasonFormat === "tournament-of-all-stars") {
               if (state.seasonFormat === "all-stars-legacy" || (state.episodeNumber === 1 && state.premiereFormat === "top2") || data.isMidSeasonNonElim) {
                   p1 = data.placements.topTwo[0];
                   p2 = data.placements.topTwo[1];
+              } else if (data.isQuit && data.quitTop2) {
+                  p1 = data.quitTop2[0];
+                  p2 = data.quitTop2[1];
               } else {
                   p1 = data.placements.bottomTwo[0];
                   p2 = data.placements.bottomTwo[1];
@@ -3002,7 +3153,7 @@ if (state.seasonFormat === "tournament-of-all-stars") {
             let lipSyncText = "";
             if (state.seasonFormat === "all-stars-legacy") {
                 lipSyncText = "For you to lip-sync... for your legacy! Good luck, and don't f*ck it up.";
-            } else if ((state.episodeNumber === 1 && state.premiereFormat === "top2") || data.isMidSeasonNonElim) {
+            } else if ((state.episodeNumber === 1 && state.premiereFormat === "top2") || data.isMidSeasonNonElim || data.isQuit) {
                 lipSyncText = "For you to lip-sync... for the win! Good luck, and don't f*ck it up.";
             } else {
                 lipSyncText = "For you to lip-sync... for your lives! Good luck, and don't f*ck it up.";
@@ -3172,6 +3323,17 @@ if (state.seasonFormat === "tournament-of-all-stars") {
                   w.record.BTM2 += 1; w.history[state.episodeNumber - 1] = "BTM2";
                   l.record.BTM2 += 1; l.history[state.episodeNumber - 1] = "BTM2";
                   data.elimination = { isDisq: true, disqQueen: dq, winner: w, loser: l };
+              // QUIT: quitting queen already sashayed; top 2 lip sync for the win (no elimination from btm)
+              } else if (data.isQuit) {
+                  const w = data.lipSync.winner.queen;
+                  const l = data.lipSync.loser.queen;
+                  if (data.riggedOutcome === "w1") { const ev1 = data.lipSync.performances[0]; const ev2 = data.lipSync.performances[1]; data.lipSync.winner = {queen: ev1.queen, event: ev1.event}; data.lipSync.loser = {queen: ev2.queen, event: ev2.event}; }
+                  if (data.riggedOutcome === "w2") { const ev1 = data.lipSync.performances[0]; const ev2 = data.lipSync.performances[1]; data.lipSync.winner = {queen: ev2.queen, event: ev2.event}; data.lipSync.loser = {queen: ev1.queen, event: ev1.event}; }
+                  const qw = data.lipSync.winner.queen;
+                  const ql = data.lipSync.loser.queen;
+                  qw.record.WIN += 1; qw.history[state.episodeNumber - 1] = "WIN";
+                  ql.record.TOP2 = (ql.record.TOP2 || 0) + 1; ql.history[state.episodeNumber - 1] = "TOP 2";
+                  data.elimination = { isQuit: true, winner: qw, loser: ql, quitQueen: data.quitQueen };
               } else {
               let w = data.lipSync.winner.queen;
               let l = data.lipSync.loser.queen;
@@ -3273,6 +3435,18 @@ if (state.seasonFormat === "tournament-of-all-stars") {
                   </div>
                   <div class="group-row" style="border:none;">
                     <p class="muted" style="margin-top: 10px; font-style: italic; color: var(--danger);">As a result, no queen from the bottom 2 will be going home tonight.</p>
+                  </div>
+                `;
+            } else if (e.isQuit) {
+                contentInner = `
+                  <div class="group-row">
+                    <div class="placement-card bg-win">${escapeHtml(e.winner.name)}</div>
+                    <p class="muted">You're a winner baby! You lip synced your way to the top tonight.</p>
+                  </div>
+                  <div class="group-row" style="border:none;">
+                    <div class="placement-card bg-top2">${escapeHtml(e.loser.name)}</div>
+                    <p class="muted">You are safe to slay another day.</p>
+                    <p class="muted" style="margin-top: 8px; font-style:italic; color:#ff66a2;">Tonight's bottom queens are not eliminated — due to ${escapeHtml(e.quitQueen.name)}'s shock withdrawal, no one else is going home.</p>
                   </div>
                 `;
             } else if (e.legacy) {
@@ -3438,6 +3612,7 @@ if (state.seasonFormat === "tournament-of-all-stars") {
       if (state.episodeData.isTournamentBracket) totalPhases = state.episodeData.bracketEnd ? 9 : 8;
       if (state.episodeData.isTournamentSemi) totalPhases = 9;
       if (state.episodeData.isTournamentMerge) totalPhases = 8;
+      if (state.episodeData.isQuit && !state.episodeData.isGirlGroup && !state.episodeData.isLaLaPaRuza && state.seasonFormat !== "all-stars-assassin") totalPhases = 8;
   }
 
   if (state.phase < totalPhases) { state.phase++; renderEpisode(); }
@@ -4603,6 +4778,7 @@ window.resolveTournamentTie = function(queenId) {
         if (ed) {
           if (ed.isDept) special = "DEPT";
           else if (ed.isDisq) special = "DISQ";
+          else if (ed.isQuit) special = "QUIT";
           else if (ed.isLaLaPaRuza) special = "LaLaPaRuza";
           else if (ed.isMidSeasonNonElim) special = "NonElim";
           else if (ed.isGirlGroup) special = "GirlGroup";
@@ -4610,6 +4786,8 @@ window.resolveTournamentTie = function(queenId) {
         document.getElementById("dbg-special").textContent = special;
         const disqEl = document.getElementById("dbg-disq-status");
         if (disqEl) disqEl.textContent = state.disqEnabled ? "ENABLED (0.5% chance)" : "DISABLED";
+        const quitEl = document.getElementById("dbg-quit-status");
+        if (quitEl) quitEl.textContent = state.quitEnabled ? (state.hasQuit ? "USED THIS SEASON" : "ENABLED (2% chance)") : "DISABLED";
       }
 
       // ── Force DEPT on CURRENT episode ──
@@ -4654,11 +4832,16 @@ window.resolveTournamentTie = function(queenId) {
       document.getElementById("dbg-clearForce").addEventListener("click", () => {
         state._forceDeptNextEp = false;
         state._forceDisqNextEp = false;
+        state._forceQuitNextEp = false;
         if (state.episodeData) {
           state.episodeData.isDept = false;
           state.episodeData.deptQueen = null;
           state.episodeData.isDisq = false;
           state.episodeData.disqQueen = null;
+          state.episodeData.isQuit = false;
+          state.episodeData.quitQueen = null;
+          state.episodeData.quitApplied = false;
+          state.episodeData.quitTop2 = null;
         }
         refreshDebugState();
         alert("Forced flags cleared.");
@@ -4712,6 +4895,67 @@ window.resolveTournamentTie = function(queenId) {
         state._forceDisqNextEp = true;
         refreshDebugState();
         alert("✅ DISQ will be forced on the next eligible episode.");
+      });
+
+      // ── Toggle QUIT on/off ──
+      document.getElementById("dbg-toggleQuit").addEventListener("click", () => {
+        state.quitEnabled = !state.quitEnabled;
+        const toggle = document.getElementById("quitToggle");
+        if (toggle) toggle.checked = state.quitEnabled;
+        refreshDebugState();
+        alert(`QUIT is now ${state.quitEnabled ? "ENABLED" : "DISABLED"}.`);
+      });
+
+      // ── Force QUIT on CURRENT episode ──
+      document.getElementById("dbg-forceQUIT").addEventListener("click", () => {
+        if (state.mode !== "game" || !state.episodeData) {
+          return alert("No active game episode to force. Start a Regular Season first.");
+        }
+        if (state.seasonFormat !== "regular") {
+          return alert("QUIT is only available in Regular Season format.");
+        }
+        const ed = state.episodeData;
+        if (ed.isLaLaPaRuza || ed.isMidSeasonNonElim || ed.isTournamentBracket || ed.isTournamentMerge || ed.isTournamentSemi) {
+          return alert("Cannot force QUIT on this episode type.");
+        }
+        if (state.episodeNumber === 1) {
+          return alert("Cannot force QUIT on the premiere.");
+        }
+        if (ed.isDept || ed.isDisq) {
+          return alert("This episode already has a DEPT or DISQ event. Clear forced flags first.");
+        }
+        if (state.hasQuit) {
+          return alert("A queen has already quit this season. Only one QUIT per season is allowed.");
+        }
+        // Reset any already-processed quit data
+        ed.isQuit = false;
+        ed.quitQueen = null;
+        ed.quitApplied = false;
+        ed.quitTop2 = null;
+        ed.elimination = null;
+        ed.lipSync = null;
+        ed.countsApplied = false;
+        ed.isQuit = true;
+        const btm2Ids = new Set((ed.placements.bottomTwo || []).map(q => q.id));
+        const winnerIds = new Set((ed.placements.winners || []).map(q => q.id));
+        const candidates = activeQueens().filter(q => !btm2Ids.has(q.id) && !winnerIds.has(q.id));
+        if (!candidates.length) return alert("No eligible queens to assign QUIT to.");
+        ed.quitQueen = pick(candidates);
+        state.hasQuit = true;
+        state.quitEnabled = true;
+        // Rewind phase to the judging screen so quit_announce fires next
+        state.phase = Math.min(state.phase, 3);
+        panelModal.classList.add("hidden");
+        refreshDebugState();
+        renderEpisode();
+        alert(`✅ QUIT forced on: ${ed.quitQueen.name}\nPhase rewound to 3 — click Next to see the shock announcement.`);
+      });
+
+      // ── Force QUIT on NEXT episode ──
+      document.getElementById("dbg-forceQUIT-next").addEventListener("click", () => {
+        state._forceQuitNextEp = true;
+        refreshDebugState();
+        alert("✅ QUIT will be forced on the next eligible episode.");
       });
 
       // ── Re-roll current episode ──
@@ -4785,6 +5029,28 @@ window.resolveTournamentTie = function(queenId) {
                 ed.isDisq = true;
                 ed.disqQueen = pick(candidates);
                 state._forceDisqNextEp = false;
+                renderEpisode();
+              }
+            }
+          }
+          // Apply forced QUIT on next episode
+          if (state._forceQuitNextEp && state.mode === "game" && state.episodeData) {
+            const ed = state.episodeData;
+            const eligible = !ed.isLaLaPaRuza && !ed.isMidSeasonNonElim
+                          && !ed.isTournamentBracket && !ed.isTournamentMerge && !ed.isTournamentSemi
+                          && !ed.isDept && !ed.isDisq
+                          && state.seasonFormat === "regular" && state.episodeNumber > 1
+                          && !state.hasQuit;
+            if (eligible && !ed.isQuit) {
+              const btm2Ids = new Set((ed.placements.bottomTwo || []).map(q => q.id));
+              const winnerIds = new Set((ed.placements.winners || []).map(q => q.id));
+              const candidates = activeQueens().filter(q => !btm2Ids.has(q.id) && !winnerIds.has(q.id));
+              if (candidates.length > 0) {
+                ed.isQuit = true;
+                ed.quitQueen = pick(candidates);
+                state.hasQuit = true;
+                state.quitEnabled = true;
+                state._forceQuitNextEp = false;
                 renderEpisode();
               }
             }
