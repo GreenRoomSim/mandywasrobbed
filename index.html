@@ -691,6 +691,12 @@
   font-weight: 700;
 }
 
+.track-record-table .placement-RTRN {
+  background: #ff943d;
+  color: #000;
+  font-weight: 700;
+}
+
 .track-record-table .placement-EMPTY {
   background: #d9d9d9;
   color: #000;
@@ -705,6 +711,7 @@
 .placement-DEPT { background-color: #e2a9f1; color: black; font-weight: bold; }
 .placement-DISQ { background-color: #484848; color: white; font-weight: bold; }
 .placement-QUIT { background-color: #ff66a2; color: black; font-weight: bold; }
+.placement-RTRN { background-color: #ff943d; color: black; font-weight: bold; }
 .placement-WINNER { background-color: #ffd700; color: black; font-weight: bold; }
 .placement-RUNNER-UP { background-color: #c0c0c0; color: black; font-weight: bold; }
 .placement-GUEST { background-color: #eaecf0; color: black; }
@@ -860,7 +867,7 @@
           <img src="banner.png" alt="Drag Race Simulator Banner" class="main-logo" />
         </div>
       <h1 class="title">Greenroom Drag Race Simulator</h1>
-      <p class="subtitle" id="secretTrigger">Dev v2.2 - Last Updated 30/4/26</p>
+      <p class="subtitle" id="secretTrigger">V2.1 (Final) - Last Updated 1/5/26</p>
 
     <!-- Debug Code Entry Modal -->
     <div id="debugCodeModal" class="modal hidden">
@@ -1019,13 +1026,21 @@
         </div>
         <div class="panel-body">
           <div class="patch-notes-content">
-            <h3>v2.2 - Update</h3>
+            <h3>v2.1 (Final) - Update</h3>
             <ul>
-              <li>Added Queen Quits (QUIT) twist — a queen can quit mid-critiques (2% chance, once per season, Regular Season only).</li>
-              <li>When a queen quits, the episode converts to a Top 2 lip sync for the win format. Bottom queens receive LOW instead of BTM2.</li>
-              <li>QUIT placement appears in the track record in pink (#ff66a2).</li>
-              <li>Added QUIT toggle to Extra Options, and Force QUIT controls to the Debug Panel.</li>
-              <li>QUIT is mutually exclusive with DEPT and DISQ — only one special twist can occur per season.</li>
+              <li>Added Returning Format to Extra Options for Regular Seasons.</li>
+              <li>Format 1 — Random Return: The simulator picks one eliminated queen to dramatically return to the competition a few episodes before the finale. Shown with the new RTRN (#ff943d) placement on the track record.</li>
+              <li>Format 2 — No Return: No queen returns. This is the default.</li>
+            </ul>
+
+            <h3>v2.1 (Part 1)- Update</h3>
+            <ul>
+              <li>Remodeled the Track Record Table with new features and pictures.</li>
+              <li>Added new placements for season realism such as DEPT, QUIT, and DISQ</li>
+              <li>Added Miss Congeniality to Regular seasons, along with Guests at the finale</li>
+              <li>Made mini challenges less frequent</li>
+              <li>Added a hidden "Debug Panel" for developers to test and force certain outcomes.</li>
+              <li>Moved & Added some toggles into the new "Extra Options" section in setup.</li>
             </ul>
 
             <h3>v2.0.1 - Mini Update</h3>
@@ -1247,11 +1262,30 @@
             </label>
           </div>
 
+          <div style="position: relative;">
+            <div id="returnFormatOverlay" class="hidden" style="position: absolute; inset: -5px; background: rgba(238, 251, 231, 0.7); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 10; display: flex; align-items: center; justify-content: center; border-radius: 12px; border: 2px solid var(--border); pointer-events: none; transition: all 0.3s ease;">
+              <div style="background: var(--card); padding: 8px 16px; border-radius: 20px; box-shadow: var(--shadow); border: 1px solid var(--border); display: flex; align-items: center; gap: 8px;">
+                <span style="color: var(--muted); font-weight: 600; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase;">Regular Season Only</span>
+              </div>
+            </div>
+            <div class="toggle-row" id="returnFormatRow" style="align-items: flex-start; flex-wrap: wrap;">
+            <div class="toggle-label-group" style="flex: 1; min-width: 200px;">
+              <span class="toggle-label-title">Returning Format</span>
+              <span class="toggle-label-desc">Choose whether an eliminated queen returns to the competition during the season. <strong>Random Return</strong>: one eliminated queen is chosen randomly. <strong>Queens Vote</strong>: the remaining queens each vote for who they want to return — if there's a tie, you decide! Cannot happen on premiere, Top 2, LaLaPaRuza, Final, or QUIT/DISQ/DEPT episodes. Queens who quit or were disqualified are not eligible. Regular Season only.</span>
+            </div>
+            <div style="min-width: 160px; flex-shrink: 0; margin-top: 2px;">
+              <select id="returnFormatSelect" style="width: 100%; border: 1px solid var(--border); border-radius: 12px; padding: 10px 11px; font-size: 14px; background: #fbfff8; color: var(--ink); outline: none; -webkit-appearance: none; appearance: none; cursor: pointer;">
+                <option value="none">No Return</option>
+                <option value="random">Random Return</option>
+                <option value="vote">Remaining Queens Vote</option>
+              </select>
+            </div>
+            </div>
+          </div> <!-- end returnFormatRow relative wrapper -->
+
         </div>
       </div>
     </div>
-
-    <section id="setupView" class="panel">
       <div class="panel-header">
         <h2>Cast Setup</h2>
         <div class="meta">Select queens from the franchise or create your own.</div>
@@ -1524,6 +1558,8 @@
       hasQuit: false,
       hasDept: false,
       hasDisq: false,
+      returnFormat: "none",
+      hasReturn: false,
       // TOURNAMENT TRACKERS:
       tournamentPoints: {}, 
       wildcardQueen: null,
@@ -1567,6 +1603,10 @@
 
     // Extra Options Modal
     document.getElementById("openExtraOptionsBtn").addEventListener("click", () => {
+      // Sync returning format overlay with current season format
+      const isRegular = el.seasonFormatSelect.value === "regular";
+      document.getElementById("returnFormatOverlay").classList.toggle("hidden", isRegular);
+      document.getElementById("returnFormatSelect").disabled = !isRegular;
       document.getElementById("extraOptionsModal").classList.remove("hidden");
     });
     document.getElementById("closeExtraOptionsBtn").addEventListener("click", () => {
@@ -1586,6 +1626,9 @@
     });
     document.getElementById("quitToggle").addEventListener("change", (e) => {
       state.quitEnabled = e.target.checked;
+    });
+    document.getElementById("returnFormatSelect").addEventListener("change", (e) => {
+      state.returnFormat = e.target.value;
     });
     el.suggestBtn.addEventListener("click", () => {
       window.open("https://forms.gle/bprZzRLGFyfe9yWs6", "_blank");
@@ -1776,7 +1819,10 @@
       state.deptEnabled = document.getElementById("deptToggle").checked;
       state.disqEnabled = document.getElementById("disqToggle").checked;
       state.quitEnabled = document.getElementById("quitToggle").checked;
-      state.hasQuit = false; state.hasDept = false; state.hasDisq = false;
+      state.returnFormat = document.getElementById("returnFormatSelect").value;
+      // Return is Regular Season only — force off for all other formats
+      if (state.seasonFormat !== "regular") state.returnFormat = "none";
+      state.hasQuit = false; state.hasDept = false; state.hasDisq = false; state.hasReturn = false;
       
       el.customQueenModal.classList.add("hidden");
       state.queens = state.queens.map((q, i) => ({
@@ -1785,7 +1831,7 @@
         history: [], eliminated: false, elimOrder: 999
       }));
       state.episodeNumber = 1; state.phase = 1; state.mode = "game"; state.usedMinis = []; state.usedMaxis = []; state.hasMidSeasonNonElim = false; state.episodeLog = [];
-      state.hasQuit = false; state.hasDept = false; state.hasDisq = false;
+      state.hasQuit = false; state.hasDept = false; state.hasDisq = false; state.hasReturn = false;
       state.tournamentPoints = {};
       state.queens.forEach(q => state.tournamentPoints[q.id] = 0);
       prepareEpisode(); renderAll();
@@ -2308,7 +2354,85 @@ if (state.seasonFormat === "tournament-of-all-stars") {
               }
           }
       }
-    }
+
+      // RETURN Check — Random Return format, Regular Season only, not premiere, not special episode, only once per season
+      if (state.returnFormat === "random" && !state.hasReturn && state.seasonFormat === "regular" && state.episodeNumber > 1) {
+          const ed = state.episodeData;
+          if (ed && !ed.isLaLaPaRuza && !ed.isMidSeasonNonElim && !ed.isDept && !ed.isDisq && !ed.isQuit && !ed.isGirlGroup) {
+              const finaleThreshold = state.finaleFormat === "top3" ? 3 : 4;
+              const n = activeQueens().length;
+              const minCount = finaleThreshold + 2; // force trigger at this count (last chance window)
+              const maxCount = finaleThreshold + 4; // start of window
+              if (n >= minCount && n <= maxCount) {
+                  const forceTrigger = (n === minCount);
+                  if (forceTrigger || Math.random() < 0.5) {
+                      // Eligible returners: eliminated queens who didn't quit, weren't DISQ'd or DEPT'd
+                      const eligibleReturners = state.queens.filter(q =>
+                          q.eliminated &&
+                          !Object.values(q.history).includes("QUIT") &&
+                          !Object.values(q.history).includes("DISQ") &&
+                          !Object.values(q.history).includes("DEPT")
+                      );
+                      if (eligibleReturners.length > 0) {
+                          const returnQueen = pick(eligibleReturners);
+                          ed.isReturn = true;
+                          ed.returnQueen = returnQueen;
+                          ed.returnApplied = false;
+                          state.hasReturn = true;
+                      }
+                  }
+              }
+          }
+      }
+
+      // RETURN Check — Remaining Queens Vote format
+      if (state.returnFormat === "vote" && !state.hasReturn && state.seasonFormat === "regular" && state.episodeNumber > 1) {
+          const ed = state.episodeData;
+          if (ed && !ed.isLaLaPaRuza && !ed.isMidSeasonNonElim && !ed.isDept && !ed.isDisq && !ed.isQuit && !ed.isGirlGroup) {
+              const finaleThreshold = state.finaleFormat === "top3" ? 3 : 4;
+              const n = activeQueens().length;
+              const minCount = finaleThreshold + 2;
+              const maxCount = finaleThreshold + 4;
+              if (n >= minCount && n <= maxCount) {
+                  const forceTrigger = (n === minCount);
+                  if (forceTrigger || Math.random() < 0.5) {
+                      const eligibleReturners = state.queens.filter(q =>
+                          q.eliminated &&
+                          !Object.values(q.history).includes("QUIT") &&
+                          !Object.values(q.history).includes("DISQ") &&
+                          !Object.values(q.history).includes("DEPT")
+                      );
+                      if (eligibleReturners.length > 0) {
+                          const remainingQueens = activeQueens();
+                          // Each remaining queen votes for a random eligible returner
+                          let voteCounts = {};
+                          eligibleReturners.forEach(q => { voteCounts[q.id] = 0; });
+                          let voteLog = [];
+                          remainingQueens.forEach(voter => {
+                              const choice = pick(eligibleReturners);
+                              voteCounts[choice.id]++;
+                              voteLog.push({ voter, votedFor: choice });
+                          });
+                          // Determine winner(s)
+                          const maxVotes = Math.max(...Object.values(voteCounts));
+                          const leaders = eligibleReturners.filter(q => voteCounts[q.id] === maxVotes);
+                          const isTie = leaders.length > 1;
+                          ed.isVoteReturn = true;
+                          ed.returnVoteLog = voteLog;
+                          ed.returnVotes = eligibleReturners
+                              .map(q => ({ queen: q, votes: voteCounts[q.id] }))
+                              .sort((a, b) => b.votes - a.votes);
+                          ed.returnTiedQueens = isTie ? leaders : [];
+                          ed.returnTieBreakerNeeded = isTie;
+                          ed.returnQueen = isTie ? null : leaders[0];
+                          ed.returnApplied = false;
+                          state.hasReturn = true;
+                      }
+                  }
+              }
+          }
+      }
+    } // end prepareEpisode
 
     function renderTournamentBracket() {
     const d = state.episodeData;
@@ -2540,7 +2664,16 @@ if (state.seasonFormat === "tournament-of-all-stars") {
       if (data.isQuit && !isGG && !data.isLaLaPaRuza && !isAssassin) {
           totalScreens = 8;
       }
+      if (data.isReturn && !isGG && !data.isLaLaPaRuza && !isAssassin && !data.isQuit) {
+          totalScreens = 9;
+      }
+      if (data.isVoteReturn && !isGG && !data.isLaLaPaRuza && !isAssassin && !data.isQuit) {
+          totalScreens = data.returnTieBreakerNeeded ? 11 : 10;
+      }
       el.screenCounterText.textContent = "";
+
+      // Always ensure Next button is visible at start of render (tie-breaker phase will re-hide it)
+      el.nextPhaseBtn.classList.remove("hidden");
       
       // Rig Button Toggle Logic
       // Rig Button Toggle Logic
@@ -2551,7 +2684,9 @@ if (state.seasonFormat === "tournament-of-all-stars") {
           (isAssassin && state.phase !== 3 && state.phase !== 6) ||
           (data.isTournamentMerge && state.phase !== 4 && state.phase !== 6) || // Accounts for the Merge phase shift
           (data.isQuit && !isGG && !data.isLaLaPaRuza && !isAssassin && !data.isTournamentMerge && state.phase !== 3 && state.phase !== 6) ||
-          (!data.isQuit && !isGG && !data.isLaLaPaRuza && !isAssassin && !data.isTournamentMerge && state.phase !== 3 && state.phase !== 5)
+          (data.isReturn && !isGG && !data.isLaLaPaRuza && !isAssassin && !data.isTournamentMerge && !data.isQuit) || // Always hide rig during return episodes
+          (data.isVoteReturn && !isGG && !data.isLaLaPaRuza && !isAssassin && !data.isTournamentMerge && !data.isQuit) || // Always hide rig during vote return episodes
+          (!data.isQuit && !data.isReturn && !data.isVoteReturn && !isGG && !data.isLaLaPaRuza && !isAssassin && !data.isTournamentMerge && state.phase !== 3 && state.phase !== 5)
       );
       
       // Phase Translator mapping specifically to handle Girl Group shifts and Assassin shifts
@@ -2587,6 +2722,20 @@ if (state.seasonFormat === "tournament-of-all-stars") {
       if (data.isQuit && !isGG && !data.isLaLaPaRuza && !isAssassin && !data.isTournamentMerge) {
           if (state.phase === 4) phaseTag = "quit_announce";
           else if (state.phase > 4) phaseTag = state.phase - 1;
+      }
+      // RETURN shift: insert return_announce at phase 7, return_reveal at phase 8; track record moves to phase 9
+      if (data.isReturn && !isGG && !data.isLaLaPaRuza && !isAssassin && !data.isTournamentMerge && !data.isQuit) {
+          if (state.phase === 7) phaseTag = "return_announce";
+          else if (state.phase === 8) phaseTag = "return_reveal";
+          else if (state.phase === 9) phaseTag = 7; // Track record
+      }
+      // VOTE RETURN shift: queens vote on who returns; optional user tie-breaker
+      if (data.isVoteReturn && !isGG && !data.isLaLaPaRuza && !isAssassin && !data.isTournamentMerge && !data.isQuit) {
+          if (state.phase === 7) phaseTag = "vote_return_announce";
+          else if (state.phase === 8) phaseTag = "vote_return_votes";
+          else if (state.phase === 9) phaseTag = data.returnTieBreakerNeeded ? "vote_return_tie" : "return_reveal";
+          else if (state.phase === 10) phaseTag = data.returnTieBreakerNeeded ? "return_reveal" : 7;
+          else if (state.phase === 11) phaseTag = 7;
       }
 
       let content = "";
@@ -3569,6 +3718,103 @@ if (state.seasonFormat === "tournament-of-all-stars") {
                 </div>
               </div>
             `;
+          } else if (phaseTag === "return_announce") {
+            // Return announcement — "Someone is returning!"
+            content = `
+              <div class="section-card flex-col-center">
+                <div class="label-row"><span class="pill">A Twist!</span></div>
+                <p class="big-message">Hold on…</p>
+                <p class="muted" style="max-width: 480px; text-align: center;">Before we end tonight's episode, I have a very special announcement. One eliminated queen will be returning to the competition!</p>
+                <p class="muted" style="margin-top: 8px; font-weight: 700; color: var(--ink);">That queen is…</p>
+              </div>
+            `;
+          } else if (phaseTag === "return_reveal") {
+            // Apply the return — un-eliminate the queen and give her the RTRN placement
+            if (!data.returnApplied) {
+              const rq = data.returnQueen;
+              rq.eliminated = false;
+              rq.elimOrder = 999;
+              rq.history[state.episodeNumber - 1] = "RTRN";
+              data.returnApplied = true;
+            }
+            content = `
+              <div class="section-card flex-col-center">
+                <div class="label-row"><span class="pill">She's Back!</span></div>
+                <p class="big-message">Returning Queen!</p>
+                <div style="margin: 16px 0;">
+                  ${data.returnQueen.image
+                    ? `<img src="${data.returnQueen.image}" alt="${escapeHtml(data.returnQueen.name)}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #ff943d; display: block; margin: 0 auto 12px;" />`
+                    : ""}
+                  <div class="placement-card bg-return" style="font-size: 20px; padding: 16px 32px;">${escapeHtml(data.returnQueen.name)}</div>
+                </div>
+                <p class="muted">Welcome back to the competition. Your journey continues — don't waste this chance!</p>
+              </div>
+            `;
+          } else if (phaseTag === "vote_return_announce") {
+            content = `
+              <div class="section-card flex-col-center">
+                <div class="label-row"><span class="pill" style="background:#ff943d; color:#000; border-color:#ff943d;">A Twist!</span></div>
+                <p class="big-message" style="color:#ff943d;">Hold on…</p>
+                <p class="muted" style="max-width: 480px; text-align: center; margin-bottom: 12px;">Before we end tonight's episode, I have a very special announcement. One eliminated queen will be returning to the competition!</p>
+                <p class="muted" style="max-width: 480px; text-align: center; margin-bottom: 12px;">But I cannot make this decision alone. The remaining queens must each vote for who they want to see return.</p>
+                <p class="muted" style="font-weight: 800; color: var(--ink); text-align: center;">All queens, please come to the front of the stage.</p>
+              </div>
+            `;
+          } else if (phaseTag === "vote_return_votes") {
+            content = `
+              <div class="section-card">
+                <div class="label-row"><span class="pill" style="background:#ff943d; color:#000; border-color:#ff943d;">The Votes</span></div>
+                <p class="big-message">Who Should Return?</p>
+                <p class="muted" style="text-align:center; margin-bottom:16px;">Each remaining queen reveals their vote...</p>
+                <div class="flex-col-center" style="width:100%; gap:8px;">
+                  ${data.returnVoteLog.map(v => `
+                    <div class="group-row">
+                      <span class="muted"><strong>${escapeHtml(v.voter.name)}</strong> votes for...</span>
+                      <div class="placement-card bg-return" style="min-width:160px;">${escapeHtml(v.votedFor.name)}</div>
+                    </div>
+                  `).join("")}
+                </div>
+                <hr style="width:100%; border:0; border-top:1px solid var(--border); margin:20px 0;">
+                ${data.returnTieBreakerNeeded ? `
+                  <div class="flex-col-center">
+                    <p class="muted" style="font-weight:800; color:var(--danger); font-size:18px;">⚠ It's a TIE!</p>
+                    <p class="muted" style="text-align:center;">The votes are tied between the following queens — you must settle it on the next screen.</p>
+                    <div class="flex-center" style="margin-top:12px; gap:10px; flex-wrap:wrap;">
+                      ${data.returnTiedQueens.map(q => {
+                        const vCount = data.returnVotes.find(v => v.queen.id === q.id).votes;
+                        return `<div class="placement-card bg-return">${escapeHtml(q.name)} — ${vCount} vote${vCount !== 1 ? "s" : ""}</div>`;
+                      }).join("")}
+                    </div>
+                  </div>
+                ` : `
+                  <div class="flex-col-center">
+                    <p class="muted" style="font-weight:800; text-align:center;">The result is clear! The queen returning is...</p>
+                  </div>
+                `}
+              </div>
+            `;
+          } else if (phaseTag === "vote_return_tie") {
+            // Hide Next button — user must pick a queen first
+            el.nextPhaseBtn.classList.add("hidden");
+            content = `
+              <div class="section-card flex-col-center">
+                <div class="label-row"><span class="pill" style="background:var(--danger); color:#fff; border-color:var(--danger);">Tie Breaker!</span></div>
+                <p class="big-message" style="color:var(--danger);">It's a Tie!</p>
+                <p class="muted" style="max-width:480px; text-align:center; margin-bottom:8px;">The queens are deadlocked. You must cast the deciding vote.</p>
+                <p class="muted" style="text-align:center; margin-bottom:24px; font-weight:700;">Which queen should return to the competition?</p>
+                <div class="flex-center" style="gap:16px; flex-wrap:wrap;">
+                  ${data.returnTiedQueens.map(q => `
+                    <button
+                      onclick="window._voteReturnChoose('${q.id}')"
+                      class="tie-queen-btn primary"
+                      style="padding:16px 28px; font-size:16px; min-width:150px; border-radius:16px;">
+                      ${escapeHtml(q.name)}
+                    </button>
+                  `).join("")}
+                </div>
+                <p class="muted" style="margin-top:20px; font-size:13px;">Select a queen above, then click Next to continue.</p>
+              </div>
+            `;
           } else if (phaseTag === 7) {
             let sortedQueens = [...state.queens].sort((a, b) => {
               if (b.elimOrder !== a.elimOrder) return b.elimOrder - a.elimOrder;
@@ -3652,6 +3898,8 @@ if (state.seasonFormat === "tournament-of-all-stars") {
       if (state.episodeData.isTournamentSemi) totalPhases = 9;
       if (state.episodeData.isTournamentMerge) totalPhases = 8;
       if (state.episodeData.isQuit && !state.episodeData.isGirlGroup && !state.episodeData.isLaLaPaRuza && state.seasonFormat !== "all-stars-assassin") totalPhases = 8;
+      if (state.episodeData.isReturn && !state.episodeData.isGirlGroup && !state.episodeData.isLaLaPaRuza && state.seasonFormat !== "all-stars-assassin" && !state.episodeData.isQuit) totalPhases = 9;
+      if (state.episodeData.isVoteReturn && !state.episodeData.isGirlGroup && !state.episodeData.isLaLaPaRuza && state.seasonFormat !== "all-stars-assassin" && !state.episodeData.isQuit) totalPhases = state.episodeData.returnTieBreakerNeeded ? 11 : 10;
   }
 
   if (state.phase < totalPhases) { state.phase++; renderEpisode(); }
@@ -3666,6 +3914,24 @@ if (state.seasonFormat === "tournament-of-all-stars") {
     }
   }
     });
+    // Vote-return tie-breaker: called by inline onclick buttons on the tie screen
+    window._voteReturnChoose = function(queenId) {
+      const chosen = state.queens.find(q => q.id === queenId);
+      if (!chosen || !state.episodeData) return;
+      state.episodeData.returnQueen = chosen;
+      // Disable all tie buttons visually
+      document.querySelectorAll(".tie-queen-btn").forEach(btn => {
+        btn.disabled = true;
+        btn.style.opacity = "0.45";
+      });
+      // Highlight chosen button
+      event.currentTarget.style.opacity = "1";
+      event.currentTarget.style.outline = "3px solid #ff943d";
+      event.currentTarget.style.outlineOffset = "2px";
+      // Show the Next button so the user can proceed
+      el.nextPhaseBtn.classList.remove("hidden");
+    };
+
    function makeMatch(q1, q2) {
       // Calculate power based on track record, their lip sync stat, AND a large random factor
       let power1 = trackScore(q1) + (q1.record.WIN * 10) + (q1.stats.lipSync * 3) + (Math.random() * 40);
@@ -4781,12 +5047,15 @@ if (state.seasonFormat === "tournament-of-all-stars") {
       const val = e.target.value;
       const isTournament = val === "tournament-of-all-stars";
       const isAssassin = val === "all-stars-assassin";
+      const isRegular = val === "regular";
 
       const tournamentOverlay = document.getElementById("tournamentOverlay");
       const assassinOverlay = document.getElementById("assassinOverlay");
       const extraSelects = document.querySelectorAll("#extraSettingsWrapper select");
       const premiereSelect = document.getElementById("premiereFormatSelect");
       const finaleSelect = document.getElementById("finaleFormatSelect");
+      const returnFormatRow = document.getElementById("returnFormatRow");
+      const returnFormatSelect = document.getElementById("returnFormatSelect");
 
       // Full lock for Tournament
       tournamentOverlay.classList.toggle("hidden", !isTournament);
@@ -4802,6 +5071,16 @@ if (state.seasonFormat === "tournament-of-all-stars") {
         premiereSelect.style.opacity = isAssassin ? "0.5" : "1";
         finaleSelect.disabled = false;
         finaleSelect.style.opacity = "1";
+      }
+
+      // Returning Format: show blocker overlay for all non-Regular formats, reset select
+      const returnFormatOverlay = document.getElementById("returnFormatOverlay");
+      const returnFormatOverlayActive = !isRegular;
+      returnFormatOverlay.classList.toggle("hidden", !returnFormatOverlayActive);
+      returnFormatSelect.disabled = returnFormatOverlayActive;
+      if (!isRegular) {
+        returnFormatSelect.value = "none";
+        state.returnFormat = "none";
       }
     });
     el.randomizeQueenBtn.addEventListener("click", randomizeQueenForm);
