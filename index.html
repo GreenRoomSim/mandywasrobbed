@@ -263,6 +263,35 @@
     .muted { color: var(--muted); margin: 0; text-align: center;
     }
 
+    /* ── Photo-enhanced placement cards ── */
+    .placement-card.with-photo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      padding: 8px 14px 10px;
+      min-width: 84px;
+    }
+    .placement-card .pc-img {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid rgba(255,255,255,0.5);
+      display: block;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    }
+    .placement-card.small.with-photo {
+      padding: 5px 10px 7px;
+      min-width: 60px;
+      gap: 4px;
+    }
+    .placement-card.small .pc-img {
+      width: 36px;
+      height: 36px;
+    }
+
     /* Standings Table Styling */
     .standings-table {
       border-collapse: collapse;
@@ -1744,6 +1773,35 @@
     function escapeHtml(text) { return String(text).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;"); }
     function normalizeStat(v) { const n = parseInt(v ?? 5, 10); return clamp(Number.isFinite(n) ? n : 5, 1, 10); }
 
+    // ── Queen photo injection ───────────────────────────────────────────────
+    // After any innerHTML update, scan for .placement-card elements and inject
+    // the queen's photo if one is available. Cards are matched by:
+    //   1. data-queen-id attribute (explicit, for multi-child cards like winner reveals)
+    //   2. text content exactly matching a queen's name
+    function injectQueenPhotos(container) {
+      if (!container) return;
+      container.querySelectorAll('.placement-card').forEach(card => {
+        if (card.querySelector('.pc-img')) return; // already processed
+        let q = null;
+        if (card.dataset.queenId !== undefined && card.dataset.queenId !== '') {
+          const id = parseInt(card.dataset.queenId, 10);
+          q = state.queens.find(x => x.id === id) || null;
+        }
+        if (!q) {
+          const text = card.textContent.trim();
+          q = state.queens.find(x => x.name === text) || null;
+        }
+        if (!q || !q.image) return;
+        const img = document.createElement('img');
+        img.src = q.image;
+        img.className = 'pc-img';
+        img.alt = '';
+        img.onerror = function() { this.remove(); card.classList.remove('with-photo'); };
+        card.insertBefore(img, card.firstChild);
+        card.classList.add('with-photo');
+      });
+    }
+
     function getTrackRecordClass(p) {
         if (!p) return "";
         if (p === "BTM2" || p === "BTM") return "bg-btm";
@@ -2633,6 +2691,7 @@ if (state.seasonFormat === "tournament-of-all-stars") {
             `;
             el.nextPhaseBtn.classList.add("hidden");
             el.gameContent.innerHTML = content;
+            injectQueenPhotos(el.gameContent);
             return;
         }
 
@@ -2700,6 +2759,7 @@ if (state.seasonFormat === "tournament-of-all-stars") {
     }
 
     el.gameContent.innerHTML = content;
+    injectQueenPhotos(el.gameContent);
     el.nextPhaseBtn.textContent = (p === 8 && !d.bracketEnd) || (p === 9 && d.bracketEnd) ? "Next Episode" : "Next";
     el.rigGameBtn.classList.add("hidden");
 }
@@ -3959,6 +4019,7 @@ if (state.seasonFormat === "tournament-of-all-stars") {
       }
 
       el.gameContent.innerHTML = content;
+      injectQueenPhotos(el.gameContent);
 
       // Wire tie-breaker card clicks — done here where el is guaranteed in scope
       if (phaseTag === "vote_return_votes" && data && data.returnTieBreakerNeeded) {
@@ -4280,11 +4341,11 @@ if (state.seasonFormat === "tournament-of-all-stars") {
                     <div class="spinner"></div>
                   </div>
                   <div id="winnerRevealBox" class="hidden flex-col-center" style="width:100%;">
-                    <div class="placement-card bg-winner" style="padding:24px; font-size:20px; width:100%; max-width:400px; border-radius:24px;">
+                    <div class="placement-card bg-winner" data-queen-id="${f.final.winner.id}" style="padding:24px; font-size:20px; width:100%; max-width:400px; border-radius:24px;">
                       <p style="margin:0 0 8px; font-size:14px; font-weight:600; opacity:0.8;">WINNER</p>
                       <p class="big-message" style="margin:0;">${escapeHtml(f.final.winner.name)}<span class="winner-crown">👑</span></p>
                     </div>
-                    <div class="placement-card bg-runner" style="padding:16px; width:100%; max-width:400px; border-radius:16px; margin-top:12px;">
+                    <div class="placement-card bg-runner" data-queen-id="${f.final.loser.id}" style="padding:16px; width:100%; max-width:400px; border-radius:16px; margin-top:12px;">
                       <p style="margin:0 0 4px; font-size:12px; font-weight:600; opacity:0.8;">RUNNER UP</p>
                       <p style="margin:0; font-weight:800; font-size:16px;">${escapeHtml(f.final.loser.name)}</p>
                     </div>
@@ -4457,11 +4518,11 @@ if (state.seasonFormat === "tournament-of-all-stars") {
                   <div class="spinner"></div>
                 </div>
                 <div id="winnerRevealBox" class="hidden flex-col-center" style="width:100%;">
-                    <div class="placement-card bg-winner" style="padding: 24px; font-size: 20px; width: 100%; max-width: 400px; border-radius: 24px;">
+                    <div class="placement-card bg-winner" data-queen-id="${f.final.winner.id}" style="padding: 24px; font-size: 20px; width: 100%; max-width: 400px; border-radius: 24px;">
                       <p style="margin:0 0 8px; font-size:14px; font-weight:600; opacity:0.8;">WINNER</p>
                       <p class="big-message" style="margin:0;">${escapeHtml(f.final.winner.name)}<span class="winner-crown">👑</span></p>
                     </div>
-                    <div class="placement-card bg-runner" style="padding: 16px; width: 100%; max-width: 400px; border-radius: 16px;">
+                    <div class="placement-card bg-runner" data-queen-id="${f.final.loser.id}" style="padding: 16px; width: 100%; max-width: 400px; border-radius: 16px;">
                       <p style="margin:0 0 4px; font-size:12px; font-weight:600; opacity:0.8;">RUNNER UP</p>
                       <p style="margin:0; font-weight:800; font-size: 16px;">${escapeHtml(f.final.loser.name)}</p>
                     </div>
@@ -4623,11 +4684,11 @@ if (state.seasonFormat === "tournament-of-all-stars") {
                   <div class="spinner"></div>
                 </div>
                 <div id="winnerRevealBox" class="hidden flex-col-center" style="width:100%;">
-                    <div class="placement-card bg-winner" style="padding: 24px; font-size: 20px; width: 100%; max-width: 400px; border-radius: 24px;">
+                    <div class="placement-card bg-winner" data-queen-id="${f.final.winner.id}" style="padding: 24px; font-size: 20px; width: 100%; max-width: 400px; border-radius: 24px;">
                       <p style="margin:0 0 8px; font-size:14px; font-weight:600; opacity:0.8;">WINNER</p>
                       <p class="big-message" style="margin:0;">${escapeHtml(f.final.winner.name)}<span class="winner-crown">👑</span></p>
                     </div>
-                    <div class="placement-card bg-runner" style="padding: 16px; width: 100%; max-width: 400px; border-radius: 16px;">
+                    <div class="placement-card bg-runner" data-queen-id="${f.final.loser.id}" style="padding: 16px; width: 100%; max-width: 400px; border-radius: 16px;">
                       <p style="margin:0 0 4px; font-size:12px; font-weight:600; opacity:0.8;">RUNNER UP</p>
                       <p style="margin:0; font-weight:800; font-size: 16px;">${escapeHtml(f.final.loser.name)}</p>
                     </div>
@@ -4707,6 +4768,7 @@ if (state.seasonFormat === "tournament-of-all-stars") {
       }
       
       el.finaleContent.innerHTML = content;
+      injectQueenPhotos(el.finaleContent);
     }
 
     el.finaleBtn.addEventListener("click", () => { state.finaleData.step++; renderFinale(); });
