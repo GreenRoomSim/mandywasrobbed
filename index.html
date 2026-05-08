@@ -2312,8 +2312,15 @@ if (state.seasonFormat === "tournament-of-all-stars") {
         bvHighQueens.forEach(q => bvPlacedIds.add(q.id));
         const bvPureSafe = actives.filter(q => !bvPlacedIds.has(q.id));
 
+        // Build categories map so the Maxi Challenge screen can render correctly
+        const bvCategories = new Map();
+        bvCategories.set(bvWinner.id, "Slayed");
+        bvHighQueens.forEach(q => bvCategories.set(q.id, "Great"));
+        bvPureSafe.forEach(q => bvCategories.set(q.id, "Okay"));
+        bvBottomThree.forEach(q => bvCategories.set(q.id, "Flopped"));
+
         state.episodeData = {
-          mini, maxi, scores: beaverScores,
+          mini, maxi, scores: beaverScores, categories: bvCategories,
           placements: {
             winners: [bvWinner],
             highQueens: bvHighQueens,
@@ -3022,7 +3029,7 @@ if (state.seasonFormat === "tournament-of-all-stars") {
       el.gameHeader.textContent = `Episode ${state.episodeNumber}`;
       el.gameMeta.textContent = `${active.length} queens remaining • ${state.queens.length} in cast`;
 
-      let totalScreens = isGG ? 8 : (data.isLaLaPaRuza ? 8 : (data.isBeaverFormat ? (data.isBeaverLeaving ? 9 : 8) : 7));
+      let totalScreens = isGG ? 8 : (data.isLaLaPaRuza ? 8 : (data.isBeaverFormat ? ((data.isBeaverLeaving || state.episodeNumber === 1) ? 9 : 8) : 7));
       if (isAssassin) {
           totalScreens = (data.lsaData && data.lsaData.tieBreakerNeeded) ? 9 : 8;
       }
@@ -5591,13 +5598,14 @@ if (state.seasonFormat === "tournament-of-all-stars") {
 
       // Full lock for Tournament
       tournamentOverlay.classList.toggle("hidden", !isTournament);
-      extraSelects.forEach(sel => {
-        sel.disabled = isTournament;
-        sel.style.opacity = isTournament ? "0.5" : "1";
-      });
 
       const isBeaver = val === "beaver";
-      // Partial lock for Assassin and Beaver (locks premiere + extra options, finale stays free)
+      extraSelects.forEach(sel => {
+        sel.disabled = isTournament || isBeaver;
+        sel.style.opacity = (isTournament || isBeaver) ? "0.5" : "1";
+      });
+
+      // Partial lock for Assassin and Beaver (show overlay banner, lock premiere, keep finale free)
       assassinOverlay.classList.toggle("hidden", !isAssassin && !isBeaver);
       if (!isTournament) {
         premiereSelect.disabled = isAssassin || isBeaver;
